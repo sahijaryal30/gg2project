@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stellar Explorer - Solar System</title>
+    <style>
+        /* Base Styles */
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0a0a1a;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+        }
+        /* Solar System Container */
+        
+        #solar-system {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+        /* Planet Info Modal */
+        
+        .planet-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            background: rgba(10, 10, 30, 0.95);
+            border: 1px solid #4fc3f7;
+            border-radius: 10px;
+            padding: 2rem;
+            z-index: 1000;
+            box-shadow: 0 0 30px rgba(79, 195, 247, 0.3);
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .planet-modal.active {
+            display: block;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #4fc3f7;
+            padding-bottom: 1rem;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .planet-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .stat-card {
+            background: rgba(20, 20, 50, 0.5);
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 3px solid #4fc3f7;
+        }
+        
+        .weather-display {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(20, 20, 50, 0.5);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        /* Controls */
+        
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            z-index: 100;
+        }
+        
+        .control-btn {
+            background: rgba(79, 195, 247, 0.2);
+            border: 1px solid #4fc3f7;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .control-btn:hover {
+            background: rgba(79, 195, 247, 0.4);
+        }
+        /* Responsive Styles */
+        
+        @media (max-width: 768px) {
+            .planet-stats {
+                grid-template-columns: 1fr;
+            }
+            .controls {
+                flex-direction: column;
+                bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Solar System Container -->
+    <div id="solar-system"></div>
+
+    <!-- Planet Info Modal -->
+    <div class="planet-modal" id="planetModal">
+        <div class="modal-header">
+            <h2 id="planetName">Planet Name</h2>
+            <button class="close-modal" id="closeModal">&times;</button>
+        </div>
+
+        <div id="planetDescription">
+            Loading planet information...
+        </div>
+
+        <div class="planet-stats">
+            <div class="stat-card">
+                <h3>Diameter</h3>
+                <p id="planetDiameter">---</p>
+            </div>
+            <div class="stat-card">
+                <h3>Gravity</h3>
+                <p id="planetGravity">---</p>
+            </div>
+            <div class="stat-card">
+                <h3>Temperature</h3>
+                <p id="planetTemp">---</p>
+            </div>
+            <div class="stat-card">
+                <h3>Atmosphere</h3>
+                <p id="planetAtmo">---</p>
+            </div>
+        </div>
+
+        <div class="weather-display" id="weatherDisplay" style="display: none;">
+            <div id="weatherIcon"></div>
+            <div>
+                <h3>Current Weather</h3>
+                <p id="weatherText">Loading weather data...</p>
+            </div>
+        </div>
+
+        <div id="planetImages" style="margin-top: 2rem;"></div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+        <button class="control-btn" id="zoomInBtn">Zoom In</button>
+        <button class="control-btn" id="zoomOutBtn">Zoom Out</button>
+        <button class="control-btn" id="resetViewBtn">Reset View</button>
+    </div>
+
+    <!-- Three.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        // Initialize Three.js scene
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({
+            antialias: true
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('solar-system').appendChild(renderer.domElement);
+
+        // Add ambient light
+        const ambientLight = new THREE.AmbientLight(0x333333);
+        scene.add(ambientLight);
+
+        // Add directional light (sun)
+        const sunLight = new THREE.DirectionalLight(0xffffff, 1);
+        sunLight.position.set(100, 100, 50);
+        scene.add(sunLight);
+
+        // Create starfield background
+        const starGeometry = new THREE.BufferGeometry();
+        const starMaterial = new THREE.PointsMaterial({
+            color: 0xffffff,
+            size: 0.1,
+        });
+
+        const starVertices = [];
+        for (let i = 0; i < 10000; i++) {
+            starVertices.push(
+                (Math.random() - 0.5) * 2000,
+                (Math.random() - 0.5) * 2000,
+                (Math.random() - 0.5) * 2000
+            );
+        }
+
+        starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+        const stars = new THREE.Points(starGeometry, starMaterial);
+        scene.add(stars);
+
+        // Planet data
+        const planets = [{
+            name: "Mercury",
+            radius: 2.4,
+            distance: 30,
+            color: 0xaaaaaa,
+            description: "The smallest planet in our solar system and closest to the Sun.",
+            diameter: "4,880 km",
+            gravity: "3.7 m/s²",
+            temp: "-173°C to 427°C",
+            atmosphere: "Thin exosphere",
+            weatherApi: null
+        }, {
+            name: "Venus",
+            radius: 6.0,
+            distance: 50,
+            color: 0xe6c229,
+            description: "Similar in size to Earth, but with a toxic atmosphere of carbon dioxide.",
+            diameter: "12,104 km",
+            gravity: "8.87 m/s²",
+            temp: "462°C (average)",
+            atmosphere: "96.5% CO₂, 3.5% N₂",
+            weatherApi: null
+        }, {
+            name: "Earth",
+            radius: 6.3,
+            distance: 80,
+            color: 0x1a66ff,
+            description: "Our home planet, the only known place in the universe confirmed to host life.",
+            diameter: "12,742 km",
+            gravity: "9.81 m/s²",
+            temp: "-88°C to 58°C",
+            atmosphere: "78% N₂, 21% O₂",
+            weatherApi: "earth"
+        }, {
+            name: "Mars",
+            radius: 3.3,
+            distance: 120,
+            color: 0xc1440e,
+            description: "The Red Planet, home to the tallest volcano in the solar system.",
+            diameter: "6,779 km",
+            gravity: "3.71 m/s²",
+            temp: "-153°C to 20°C",
+            atmosphere: "95% CO₂, 2.7% N₂",
+            weatherApi: "mars"
+        }, {
+            name: "Jupiter",
+            radius: 14,
+            distance: 180,
+            color: 0xe3dccb,
+            description: "The largest planet in our solar system - a gas giant with a Great Red Spot.",
+            diameter: "139,820 km",
+            gravity: "24.79 m/s²",
+            temp: "-108°C (cloud tops)",
+            atmosphere: "90% H₂, 10% He",
+            weatherApi: null
+        }, {
+            name: "Saturn",
+            radius: 11.6,
+            distance: 240,
+            color: 0xf7e38e,
+            description: "Known for its beautiful ring system made of ice and rock particles.",
+            diameter: "116,460 km",
+            gravity: "10.44 m/s²",
+            temp: "-139°C (cloud tops)",
+            atmosphere: "96% H₂, 3% He",
+            weatherApi: null
+        }, {
+            name: "Uranus",
+            radius: 5,
+            distance: 280,
+            color: 0x7bc2d1,
+            description: "An ice giant that rotates on its side, with a blue-green hue from methane.",
+            diameter: "50,724 km",
+            gravity: "8.69 m/s²",
+            temp: "-197°C (average)",
+            atmosphere: "83% H₂, 15% He, 2% CH₄",
+            weatherApi: null
+        }, {
+            name: "Neptune",
+            radius: 4.9,
+            distance: 320,
+            color: 0x5b5ddf,
+            description: "The windiest planet with the strongest winds in the solar system.",
+            diameter: "49,244 km",
+            gravity: "11.15 m/s²",
+            temp: "-201°C (average)",
+            atmosphere: "80% H₂, 19% He, 1% CH₄",
+            weatherApi: null
+        }];
+
+        // Create planets
+        const planetMeshes = [];
+        const textureLoader = new THREE.TextureLoader();
+
+        planets.forEach((planet, index) => {
+            const geometry = new THREE.SphereGeometry(planet.radius, 32, 32);
+            const material = new THREE.MeshPhongMaterial({
+                color: planet.color,
+                specular: 0x111111,
+                shininess: 30
+            });
+
+            // Load texture if available (Earth only in this example)
+            if (planet.name === "Earth") {
+                textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_atmos_2048.jpg', (texture) => {
+                    material.map = texture;
+                    material.needsUpdate = true;
+                });
+            }
+
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.x = planet.distance;
+            mesh.userData.planetInfo = planet;
+            scene.add(mesh);
+            planetMeshes.push(mesh);
+        });
+
+        // Set camera position
+        camera.position.z = 350;
+
+        // Add orbit controls
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.minDistance = 20;
+        controls.maxDistance = 500;
+
+        // Raycaster for planet clicks
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Handle planet clicks
+        window.addEventListener('click', (event) => {
+            // Calculate mouse position in normalized device coordinates
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            // Update the raycaster
+            raycaster.setFromCamera(mouse, camera);
+
+            // Calculate objects intersecting the picking ray
+            const intersects = raycaster.intersectObjects(planetMeshes);
+
+            if (intersects.length > 0) {
+                const planet = intersects[0].object.userData.planetInfo;
+                showPlanetInfo(planet);
+            }
+        });
+
+        // Modal controls
+        document.getElementById('closeModal').addEventListener('click', () => {
+            document.getElementById('planetModal').classList.remove('active');
+        });
+
+        // Zoom controls
+        document.getElementById('zoomInBtn').addEventListener('click', () => {
+            controls.target.copy(camera.position);
+            controls.minDistance *= 0.8;
+            controls.maxDistance *= 0.8;
+        });
+
+        document.getElementById('zoomOutBtn').addEventListener('click', () => {
+            controls.target.copy(camera.position);
+            controls.minDistance *= 1.2;
+            controls.maxDistance *= 1.2;
+        });
+
+        document.getElementById('resetViewBtn').addEventListener('click', () => {
+            camera.position.set(0, 0, 350);
+            controls.reset();
+        });
+
+        // Show planet info
+        function showPlanetInfo(planet) {
+            const modal = document.getElementById('planetModal');
+            document.getElementById('planetName').textContent = planet.name;
+            document.getElementById('planetDescription').textContent = planet.description;
+            document.getElementById('planetDiameter').textContent = planet.diameter;
+            document.getElementById('planetGravity').textContent = planet.gravity;
+            document.getElementById('planetTemp').textContent = planet.temp;
+            document.getElementById('planetAtmo').textContent = planet.atmosphere;
+
+            // Show/hide weather based on availability
+            const weatherDisplay = document.getElementById('weatherDisplay');
+            if (planet.weatherApi) {
+                weatherDisplay.style.display = 'flex';
+                fetchWeather(planet.weatherApi);
+            } else {
+                weatherDisplay.style.display = 'none';
+            }
+
+            modal.classList.add('active');
+        }
+
+        // Fetch weather data
+        async function fetchWeather(planet) {
+            const weatherText = document.getElementById('weatherText');
+            weatherText.textContent = "Loading weather data...";
+
+            try {
+                if (planet === "earth") {
+                    // For Earth, use OpenWeather API (you'll need your own API key)
+                    const response = await fetch('https://api.openweathermap.org/data/2.5/weather?q=London&units=metric&appid=YOUR_API_KEY');
+                    const data = await response.json();
+                    weatherText.innerHTML = `
+                        <strong>Location:</strong> ${data.name}<br>
+                        <strong>Temperature:</strong> ${data.main.temp}°C<br>
+                        <strong>Conditions:</strong> ${data.weather[0].description}
+                    `;
+                } else if (planet === "mars") {
+                    // For Mars, use NASA InSight API
+                    const response = await fetch('https://api.nasa.gov/insight_weather/?api_key=DEMO_KEY&feedtype=json&ver=1.0');
+                    const data = await response.json();
+                    const latestSol = data.sol_keys[data.sol_keys.length - 1];
+                    weatherText.innerHTML = `
+                        <strong>Sol:</strong> ${latestSol}<br>
+                        <strong>Season:</strong> ${data[latestSol].Season}<br>
+                        <strong>Avg Temp:</strong> ${data[latestSol].AT.av}°C
+                    `;
+                }
+            } catch (error) {
+                weatherText.textContent = "Weather data unavailable";
+                console.error("Error fetching weather:", error);
+            }
+        }
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+
+</html>
