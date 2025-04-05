@@ -4,52 +4,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Space Exploration</title>
+    <title>Stellar Explorer - Interactive Space Journey</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+    <!-- Navigation -->
     <nav class="navbar">
-        <div class="logo">
-            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjNGZhY2ZlIiBkPSJNMjU2IDEwMmE1NCA1NCAwIDEgMSAwLTEwOCA1NCA1NCAwIDAgMSAwIDEwOHptMCAzNjJhNTQgNTQgMCAxIDEgMC0xMDggNTQgNTQgMCAwIDEgMCAxMDh6bTE1NC0xODJhNTQgNTQgMCAxIDEgMC0xMDggNTQgNTQgMCAwIDEgMCAxMDh6bS0zMDggMGE1NCA1NCAwIDEgMSAwLTEwOCA1NCA1NCAwIDAgMSAwIDEwOHpNMTI2IDQyMmM2NiAwIDEyNi01NiAxMzAtMTI2SDI1NmM0IDcwIDY0IDEyNiAxMzAgMTI2eiIvPjwvc3ZnPg=="
-                alt="Logo">
-            <span class="logo-text">SpaceXplorer</span>
-        </div>
+        <div class="logo">Stellar Explorer</div>
+
+        <!-- Desktop Menu -->
         <ul class="nav-links">
-            <li><a href="#">Home</a></li>
-            <li><a href="#">Solar System</a></li>
-            <li><a href="#">Galaxies</a></li>
-            <li><a href="#">Missions</a></li>
-            <li><a href="#">About</a></li>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#explore">Explore</a></li>
+            <li><a href="#missions">Missions</a></li>
+            <li><a href="#learn">Learn</a></li>
         </ul>
-        <div class="burger">
-            <div class="line1"></div>
-            <div class="line2"></div>
-            <div class="line3"></div>
+
+        <!-- Mobile Toggle -->
+        <button class="mobile-menu-toggle" id="mobileToggle">
+            ☰
+        </button>
+
+        <!-- Mobile Menu -->
+        <div class="mobile-nav-links" id="mobileMenu">
+            <a href="#home">Home</a>
+            <a href="#explore">Explore</a>
+            <a href="#missions">Missions</a>
+            <a href="#learn">Learn</a>
         </div>
     </nav>
 
-    <div class="content">
-        <h1>3D Space Exploration</h1>
-        <p>Your journey through the cosmos begins here.</p>
-    </div>
-
-    <!-- --------------------- -->
-    <div class="stars" id="stars"></div>
-
-    <div class="container">
-        <div class="planet-container">
-            <div class="planet" id="planet">
-                <div class="planet-ring"></div>
-            </div>
+    <!-- Hero Section with 3D Planet -->
+    <section class="hero" id="home">
+        <div id="planet-container"></div>
+        <div class="hero-content">
+            <h1>Explore the Cosmos</h1>
+            <p>Journey through our solar system in stunning 3D. Discover planets, moons, and spacecraft with interactive learning experiences.</p>
+            <a href="#explore" class="cta-button">Begin Exploration</a>
         </div>
+    </section>
 
-        <div class="welcome-text">
-            <h1>Welcome</h1>
-            <p>Explore our universe of possibilities</p>
-        </div>
-    </div>
-
+    <!-- Three.js Script -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
     <script src="script.js"></script>
 </body>
 
