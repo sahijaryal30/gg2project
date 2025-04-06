@@ -15,10 +15,10 @@
 
         <!-- Desktop Menu -->
         <ul class="nav-links">
-            <li><a href="#home">Home</a></li>
-            <li><a href="#explore">Explore</a></li>
-            <li><a href="#missions">Missions</a></li>
-            <li><a href="#learn">Learn</a></li>
+            <li><a href="history.html">History</a></li>
+            <li><a href="mission.html">Missions</a></li>
+            <li><a href="game.html">Explore</a></li>
+            <li><a href="track.html">More</a></li>
         </ul>
 
         <!-- Mobile Toggle -->
@@ -28,10 +28,10 @@
 
         <!-- Mobile Menu -->
         <div class="mobile-nav-links" id="mobileMenu">
-            <a href="#home">Home</a>
-            <a href="#explore">Explore</a>
-            <a href="#missions">Missions</a>
-            <a href="#learn">Learn</a>
+            <a href="history.html">History</a>
+            <a href="mission.html">Missions</a>
+            <a href="game.html">Explore</a>
+            <a href="track.html">Home</a>
         </div>
     </nav>
 
@@ -44,6 +44,113 @@
             <a href="explore.html" class="cta-button">Begin Exploration</a>
         </div>
     </section>
+
+    <!-- feedback---- -->
+
+    <div class="feedback-container">
+        <div class="feedback-header">
+            <h2>We'd Love Your Feedback</h2>
+            <p>Your opinion helps us improve our services</p>
+        </div>
+
+        <form id="feedbackForm" class="feedback-form">
+            <div class="form-group">
+                <label for="name">Your Name (optional)</label>
+                <input type="text" id="name" class="form-control" placeholder="John Doe">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email (optional)</label>
+                <input type="email" id="email" class="form-control" placeholder="your@email.com">
+            </div>
+
+            <div class="form-group">
+                <label>How would you rate your experience?</label>
+                <div class="rating-container">
+                    <div class="rating-option">
+                        <input type="radio" id="rating-5" name="rating" value="5">
+                        <label for="rating-5">
+                            <div class="rating-stars">★★★★★</div>
+                            Excellent
+                        </label>
+                    </div>
+                    <div class="rating-option">
+                        <input type="radio" id="rating-4" name="rating" value="4">
+                        <label for="rating-4">
+                            <div class="rating-stars">★★★★☆</div>
+                            Good
+                        </label>
+                    </div>
+                    <div class="rating-option">
+                        <input type="radio" id="rating-3" name="rating" value="3">
+                        <label for="rating-3">
+                            <div class="rating-stars">★★★☆☆</div>
+                            Average
+                        </label>
+                    </div>
+                    <div class="rating-option">
+                        <input type="radio" id="rating-2" name="rating" value="2">
+                        <label for="rating-2">
+                            <div class="rating-stars">★★☆☆☆</div>
+                            Poor
+                        </label>
+                    </div>
+                    <div class="rating-option">
+                        <input type="radio" id="rating-1" name="rating" value="1">
+                        <label for="rating-1">
+                            <div class="rating-stars">★☆☆☆☆</div>
+                            Terrible
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="comments">Your Feedback</label>
+                <textarea id="comments" class="form-control" placeholder="What did you like or dislike? How can we improve?" required></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn">Submit Feedback</button>
+        </form>
+
+        <div class="feedback-success">
+            <div class="success-icon">✓</div>
+            <h3>Thank You for Your Feedback!</h3>
+            <p>We appreciate you taking the time to share your experience with us.</p>
+            <button class="submit-btn" onclick="resetForm()">Submit Another Feedback</button>
+        </div>
+    </div>
+    <!-- ----footer----- -->
+    <!-- Responsive Footer Bar -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3>About Us</h3>
+                <p>Exploring the universe, one space at a time.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="#explore.html">Explore</a></li>
+                    <li><a href="mission.html">Missions</a></li>
+                    <li><a href="history.html">History</a></li>
+                    <li><a href="#">More</a></li>
+
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Follow Us</h3>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="track.html"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Space Exploration Website. All Rights Reserved.</p>
+        </div>
+    </footer>
 
     <!-- Three.js Script -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>

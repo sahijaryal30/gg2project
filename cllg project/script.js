@@ -103,3 +103,43 @@
      camera.updateProjectionMatrix();
      renderer.setSize(window.innerWidth, window.innerHeight);
  });
+
+
+ //  feedback
+ document.getElementById('feedbackForm').addEventListener('submit', function(e) {
+     e.preventDefault();
+
+     // Here you would typically send the form data to your server
+     // For demonstration, we'll just show the success message
+
+     // Hide the form
+     document.querySelector('.feedback-form').style.display = 'none';
+     // Show success message
+     document.querySelector('.feedback-success').style.display = 'block';
+
+     // You could add AJAX code here to submit the form data
+     /*
+     const formData = new FormData(this);
+     fetch('/submit-feedback', {
+         method: 'POST',
+         body: formData
+     })
+     .then(response => response.json())
+     .then(data => {
+         document.querySelector('.feedback-form').style.display = 'none';
+         document.querySelector('.feedback-success').style.display = 'block';
+     })
+     .catch(error => {
+         console.error('Error:', error);
+     });
+     */
+ });
+
+ function resetForm() {
+     // Hide success message
+     document.querySelector('.feedback-success').style.display = 'none';
+     // Show form
+     document.querySelector('.feedback-form').style.display = 'block';
+     // Reset form
+     document.getElementById('feedbackForm').reset();
+ }

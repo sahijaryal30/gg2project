@@ -59,6 +59,10 @@ body {
     color: #4fc3f7;
 }
 
+.nav-links li {
+    list-style: none;
+}
+
 
 /* Mobile Menu */
 
@@ -186,5 +190,249 @@ body {
     }
     .hero p {
         font-size: 1rem;
+    }
+}
+
+
+/* footer-------- */
+
+
+/* Footer Styles */
+
+footer {
+    background-color: #1a1a1a;
+    color: #fff;
+    padding: 20px 0;
+    text-align: center;
+}
+
+.footer-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items: center;
+    gap: 20px;
+}
+
+.footer-section {
+    flex: 1 1 30%;
+    max-width: 300px;
+}
+
+.footer-section h3 {
+    font-size: 1.5em;
+    margin-bottom: 10px;
+}
+
+.footer-section p,
+.footer-section ul {
+    font-size: 0.9em;
+    margin: 0;
+    padding: 0;
+}
+
+.footer-section ul {
+    list-style: none;
+}
+
+.footer-section ul li a {
+    color: #fff;
+    text-decoration: none;
+}
+
+.footer-section ul li a:hover {
+    text-decoration: underline;
+}
+
+.social-icons a {
+    font-size: 1.2em;
+    margin-right: 10px;
+    color: #fff;
+    transition: color 0.3s;
+}
+
+.social-icons a:hover {
+    color: #00bcd4;
+}
+
+.footer-bottom {
+    margin-top: 20px;
+    font-size: 0.8em;
+}
+
+
+/* feedback----- */
+
+.feedback-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.feedback-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.feedback-header h2 {
+    font-size: 2rem;
+    color: var(--primary-color, #4285f4);
+    margin-bottom: 0.5rem;
+}
+
+.feedback-header p {
+    font-size: 1.1rem;
+    color: #666;
+}
+
+.feedback-form {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--light-gray, #e9ecef);
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color, #4285f4);
+    box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+}
+
+textarea.form-control {
+    min-height: 150px;
+    resize: vertical;
+}
+
+.rating-container {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.rating-option {
+    text-align: center;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.rating-option:hover {
+    background-color: var(--light-gray, #e9ecef);
+}
+
+.rating-option input {
+    display: none;
+}
+
+.rating-option label {
+    cursor: pointer;
+    display: block;
+}
+
+.rating-option input:checked+label {
+    color: var(--primary-color, #4285f4);
+    font-weight: bold;
+}
+
+.rating-stars {
+    font-size: 1.5rem;
+    color: #ffc107;
+    margin-bottom: 0.5rem;
+}
+
+.submit-btn {
+    background-color: var(--primary-color, #4285f4);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    display: block;
+    width: 100%;
+}
+
+.submit-btn:hover {
+    background-color: var(--primary-hover, #3367d6);
+}
+
+.feedback-success {
+    text-align: center;
+    padding: 2rem;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    margin: 0 auto;
+    display: none;
+}
+
+.feedback-success h3 {
+    color: var(--success-color, #28a745);
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.feedback-success p {
+    margin-bottom: 1.5rem;
+}
+
+.success-icon {
+    font-size: 3rem;
+    color: var(--success-color, #28a745);
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+    .feedback-container {
+        padding: 0 0.5rem;
+    }
+    .feedback-header h2 {
+        font-size: 1.5rem;
+    }
+    .feedback-form {
+        padding: 1.5rem;
+    }
+    .rating-container {
+        flex-wrap: wrap;
+    }
+    .rating-option {
+        width: 50%;
+        margin-bottom: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .feedback-header h2 {
+        font-size: 1.3rem;
+    }
+    .feedback-form {
+        padding: 1rem;
+    }
+    .rating-option {
+        width: 100%;
     }
 }

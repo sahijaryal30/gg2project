@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spacewalk Simulator</title>
+    <style>
+         :root {
+            --primary-color: #0b3d91;
+            --secondary-color: #fc3d21;
+            --dark-color: #121212;
+            --light-color: #ffffff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--dark-color);
+            color: var(--light-color);
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        #space-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+        }
+        
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+        
+        .hud-panel {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        #controls {
+            position: absolute;
+            bottom: 1rem;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: rgba(11, 61, 145, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            font-size: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+        
+        .control-btn:hover {
+            background-color: rgba(11, 61, 145, 0.9);
+            transform: scale(1.05);
+        }
+        
+        .control-btn:active {
+            background-color: var(--secondary-color);
+            transform: scale(0.95);
+        }
+        
+        #task-list {
+            position: absolute;
+            top: 50%;
+            left: 1rem;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 1rem;
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-height: 70vh;
+            overflow-y: auto;
+            width: 250px;
+        }
+        
+        .task-item {
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .task-item:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .task-item.completed {
+            background-color: rgba(0, 255, 0, 0.2);
+            text-decoration: line-through;
+        }
+        
+        #helmet-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background-image: radial-gradient( circle at center, transparent 60%, rgba(255, 255, 255, 0.05) 100%);
+            z-index: 10;
+        }
+        
+        #oxygen-level {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            width: 150px;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        #oxygen-fill {
+            height: 100%;
+            width: 100%;
+            background-color: #00b4ff;
+            transition: width 0.5s linear;
+        }
+        
+        #instructions {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 80%;
+            z-index: 100;
+        }
+        
+        #instructions button {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        @media (max-width: 768px) {
+            .control-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+            #task-list {
+                width: 200px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            #task-list {
+                width: 150px;
+                padding: 0.5rem;
+                font-size: 0.8rem;
+            }
+            .hud-panel {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="game-container">
+        <canvas id="space-canvas"></canvas>
+
+        <div id="helmet-overlay"></div>
+
+        <div id="hud">
+            <div class="hud-panel">
+                <div>OXYGEN: <span id="oxygen-percent">100</span>%</div>
+                <div>VELOCITY: <span id="velocity">0.0</span> m/s</div>
+            </div>
+            <div class="hud-panel">
+                <div>TASKS: <span id="tasks-completed">0</span>/5</div>
+                <div>TIME: <span id="mission-time">00:00</span></div>
+            </div>
+        </div>
+
+        <div id="oxygen-level">
+            <div id="oxygen-fill"></div>
+        </div>
+
+        <div id="task-list">
+            <h3>EVA Tasks</h3>
+            <div class="task-item" data-task="inspect">Inspect solar panel</div>
+            <div class="task-item" data-task="repair">Repair communication module</div>
+            <div class="task-item" data-task="collect">Collect experiment samples</div>
+            <div class="task-item" data-task="install">Install new sensor</div>
+            <div class="task-item" data-task="photo">Take photos of equipment</div>
+        </div>
+
+        <div id="controls">
+            <div class="control-btn" id="forward">↑</div>
+            <div class="control-btn" id="left">←</div>
+            <div class="control-btn" id="back">↓</div>
+            <div class="control-btn" id="right">→</div>
+            <div class="control-btn" id="up">↑↑</div>
+            <div class="control-btn" id="down">↓↓</div>
+            <div class="control-btn" id="action" style="background-color: rgba(252, 61, 33, 0.7);">✋</div>
+        </div>
+
+        <div id="instructions">
+            <h2>SPACEWALK SIMULATOR</h2>
+            <p>Experience a first-person EVA (Extravehicular Activity) with zero-gravity physics</p>
+            <p>Use the controls to navigate in 3D space and complete your mission tasks</p>
+            <p>Watch your oxygen levels and complete tasks before time runs out!</p>
+            <button id="start-mission">BEGIN MISSION</button>
+        </div>
+    </div>
+
+    <script>
+        // Game setup
+        const canvas = document.getElementById('space-canvas');
+        const ctx = canvas.getContext('2d');
+        const instructions = document.getElementById('instructions');
+        const startBtn = document.getElementById('start-mission');
+
+        // Set canvas size
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Game state
+        let missionStarted = false;
+        let missionTime = 0;
+        let oxygen = 100;
+        let velocity = {
+            x: 0,
+            y: 0,
+            z: 0
+        };
+        let position = {
+            x: 0,
+            y: 0,
+            z: -5
+        };
+        let rotation = {
+            x: 0,
+            y: 0
+        };
+        let tasksCompleted = 0;
+        let activeTask = null;
+
+        // Space objects
+        const spaceObjects = [
+            // Space station modules
+            {
+                type: 'panel',
+                x: 2,
+                y: 0,
+                z: -3,
+                width: 3,
+                height: 1,
+                depth: 0.1,
+                color: '#3366cc'
+            }, {
+                type: 'module',
+                x: 0,
+                y: 0,
+                z: -2,
+                width: 1.5,
+                height: 1.5,
+                depth: 1.5,
+                color: '#aaaaaa'
+            }, {
+                type: 'antenna',
+                x: -1,
+                y: 1,
+                z: -4,
+                width: 0.1,
+                height: 2,
+                depth: 0.1,
+                color: '#888888'
+            },
+
+            // Floating debris/equipment
+            {
+                type: 'tool',
+                x: 1.5,
+                y: 1,
+                z: -6,
+                width: 0.3,
+                height: 0.1,
+                depth: 0.3,
+                color: '#ff5555'
+            }, {
+                type: 'experiment',
+                x: -2,
+                y: -0.5,
+                z: -7,
+                width: 0.5,
+                height: 0.5,
+                depth: 0.5,
+                color: '#55ff55'
+            }, {
+                type: 'sensor',
+                x: 0,
+                y: -1,
+                z: -8,
+                width: 0.4,
+                height: 0.1,
+                depth: 0.4,
+                color: '#5555ff'
+            }
+        ];
+
+        // Stars
+        const stars = [];
+        for (let i = 0; i < 500; i++) {
+            stars.push({
+                x: Math.random() * 100 - 50,
+                y: Math.random() * 100 - 50,
+                z: Math.random() * 100,
+                size: Math.random() * 2 + 1
+            });
+        }
+
+        // Controls
+        const controls = {
+            forward: false,
+            back: false,
+            left: false,
+            right: false,
+            up: false,
+            down: false
+        };
+
+        // Set up control buttons
+        document.getElementById('forward').addEventListener('mousedown', () => controls.forward = true);
+        document.getElementById('forward').addEventListener('mouseup', () => controls.forward = false);
+        document.getElementById('forward').addEventListener('touchstart', () => controls.forward = true);
+        document.getElementById('forward').addEventListener('touchend', () => controls.forward = false);
+
+        document.getElementById('back').addEventListener('mousedown', () => controls.back = true);
+        document.getElementById('back').addEventListener('mouseup', () => controls.back = false);
+        document.getElementById('back').addEventListener('touchstart', () => controls.back = true);
+        document.getElementById('back').addEventListener('touchend', () => controls.back = false);
+
+        document.getElementById('left').addEventListener('mousedown', () => controls.left = true);
+        document.getElementById('left').addEventListener('mouseup', () => controls.left = false);
+        document.getElementById('left').addEventListener('touchstart', () => controls.left = true);
+        document.getElementById('left').addEventListener('touchend', () => controls.left = false);
+
+        document.getElementById('right').addEventListener('mousedown', () => controls.right = true);
+        document.getElementById('right').addEventListener('mouseup', () => controls.right = false);
+        document.getElementById('right').addEventListener('touchstart', () => controls.right = true);
+        document.getElementById('right').addEventListener('touchend', () => controls.right = false);
+
+        document.getElementById('up').addEventListener('mousedown', () => controls.up = true);
+        document.getElementById('up').addEventListener('mouseup', () => controls.up = false);
+        document.getElementById('up').addEventListener('touchstart', () => controls.up = true);
+        document.getElementById('up').addEventListener('touchend', () => controls.up = false);
+
+        document.getElementById('down').addEventListener('mousedown', () => controls.down = true);
+        document.getElementById('down').addEventListener('mouseup', () => controls.down = false);
+        document.getElementById('down').addEventListener('touchstart', () => controls.down = true);
+        document.getElementById('down').addEventListener('touchend', () => controls.down = false);
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case 'w':
+                case 'ArrowUp':
+                    controls.forward = true;
+                    break;
+                case 's':
+                case 'ArrowDown':
+                    controls.back = true;
+                    break;
+                case 'a':
+                case 'ArrowLeft':
+                    controls.left = true;
+                    break;
+                case 'd':
+                case 'ArrowRight':
+                    controls.right = true;
+                    break;
+                case 'q':
+                case ' ':
+                    controls.up = true;
+                    break;
+                case 'e':
+                case 'Shift':
+                    controls.down = true;
+                    break;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            switch (e.key) {
+                case 'w':
+                case 'ArrowUp':
+                    controls.forward = false;
+                    break;
+                case 's':
+                case 'ArrowDown':
+                    controls.back = false;
+                    break;
+                case 'a':
+                case 'ArrowLeft':
+                    controls.left = false;
+                    break;
+                case 'd':
+                case 'ArrowRight':
+                    controls.right = false;
+                    break;
+                case 'q':
+                case ' ':
+                    controls.up = false;
+                    break;
+                case 'e':
+                case 'Shift':
+                    controls.down = false;
+                    break;
+            }
+        });
+
+        // Mouse look
+        let isMouseDown = false;
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+
+        canvas.addEventListener('mousedown', (e) => {
+            isMouseDown = true;
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+        });
+
+        document.addEventListener('mouseup', () => {
+            isMouseDown = false;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isMouseDown || !missionStarted) return;
+
+            const deltaX = e.clientX - lastMouseX;
+            const deltaY = e.clientY - lastMouseY;
+
+            rotation.y -= deltaX * 0.002;
+            rotation.x -= deltaY * 0.002;
+
+            // Limit vertical rotation
+            rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rotation.x));
+
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+        });
+
+        // Touch controls for mobile
+        canvas.addEventListener('touchstart', (e) => {
+            isMouseDown = true;
+            lastMouseX = e.touches[0].clientX;
+            lastMouseY = e.touches[0].clientY;
+            e.preventDefault();
+        });
+
+        document.addEventListener('touchend', () => {
+            isMouseDown = false;
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isMouseDown || !missionStarted) return;
+
+            const deltaX = e.touches[0].clientX - lastMouseX;
+            const deltaY = e.touches[0].clientY - lastMouseY;
+
+            rotation.y -= deltaX * 0.002;
+            rotation.x -= deltaY * 0.002;
+
+            // Limit vertical rotation
+            rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rotation.x));
+
+            lastMouseX = e.touches[0].clientX;
+            lastMouseY = e.touches[0].clientY;
+            e.preventDefault();
+        });
+
+        // Action button
+        document.getElementById('action').addEventListener('click', performAction);
+
+        // Task items
+        const taskItems = document.querySelectorAll('.task-item');
+        taskItems.forEach(item => {
+            item.addEventListener('click', () => {
+                if (missionStarted && !item.classList.contains('completed')) {
+                    activeTask = item.getAttribute('data-task');
+                    item.classList.add('active');
+                }
+            });
+        });
+
+        // Start mission
+        startBtn.addEventListener('click', () => {
+            instructions.style.display = 'none';
+            missionStarted = true;
+            missionTime = 0;
+            oxygen = 100;
+            tasksCompleted = 0;
+
+            // Reset tasks
+            taskItems.forEach(item => {
+                item.classList.remove('completed', 'active');
+            });
+
+            // Reset position
+            position = {
+                x: 0,
+                y: 0,
+                z: -5
+            };
+            velocity = {
+                x: 0,
+                y: 0,
+                z: 0
+            };
+            rotation = {
+                x: 0,
+                y: 0
+            };
+
+            // Start game loop
+            requestAnimationFrame(gameLoop);
+
+            // Start oxygen timer
+            const oxygenInterval = setInterval(() => {
+                if (missionStarted) {
+                    oxygen -= 0.1;
+                    document.getElementById('oxygen-percent').textContent = Math.floor(oxygen);
+                    document.getElementById('oxygen-fill').style.width = `${oxygen}%`;
+
+                    if (oxygen <= 0) {
+                        clearInterval(oxygenInterval);
+                        endMission(false);
+                    }
+                } else {
+                    clearInterval(oxygenInterval);
+                }
+            }, 1000);
+
+            // Start mission timer
+            const timeInterval = setInterval(() => {
+                if (missionStarted) {
+                    missionTime++;
+                    const minutes = Math.floor(missionTime / 60);
+                    const seconds = missionTime % 60;
+                    document.getElementById('mission-time').textContent =
+                        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                } else {
+                    clearInterval(timeInterval);
+                }
+            }, 1000);
+        });
+
+        // Perform action (complete task)
+        function performAction() {
+            if (!missionStarted || !activeTask) return;
+
+            // Check if near the correct object
+            let taskObject = null;
+
+            switch (activeTask) {
+                case 'inspect':
+                    taskObject = spaceObjects.find(obj => obj.type === 'panel');
+                    break;
+                case 'repair':
+                    taskObject = spaceObjects.find(obj => obj.type === 'module');
+                    break;
+                case 'collect':
+                    taskObject = spaceObjects.find(obj => obj.type === 'experiment');
+                    break;
+                case 'install':
+                    taskObject = spaceObjects.find(obj => obj.type === 'sensor');
+                    break;
+                case 'photo':
+                    taskObject = spaceObjects.find(obj => obj.type === 'antenna');
+                    break;
+            }
+
+            if (taskObject) {
+                const distance = Math.sqrt(
+                    Math.pow(position.x - taskObject.x, 2) +
+                    Math.pow(position.y - taskObject.y, 2) +
+                    Math.pow(position.z - taskObject.z, 2)
+                );
+
+                if (distance < 1.5) {
+                    // Complete task
+                    const activeItem = document.querySelector(`.task-item[data-task="${activeTask}"]`);
+                    activeItem.classList.add('completed');
+                    activeItem.classList.remove('active');
+                    tasksCompleted++;
+                    document.getElementById('tasks-completed').textContent = tasksCompleted;
+                    activeTask = null;
+
+                    // Check if all tasks completed
+                    if (tasksCompleted === 5) {
+                        endMission(true);
+                    }
+                }
+            }
+        }
+
+        // End mission
+        function endMission(success) {
+            missionStarted = false;
+
+            const message = success ?
+                'MISSION ACCOMPLISHED! All tasks completed successfully.' :
+                'MISSION FAILED! Oxygen depleted before completing tasks.';
+
+            instructions.innerHTML = `
+                <h2>${success ? 'SUCCESS' : 'FAILURE'}</h2>
+                <p>${message}</p>
+                <p>Time: ${document.getElementById('mission-time').textContent}</p>
+                <p>Tasks completed: ${tasksCompleted}/5</p>
+                <button id="start-mission">TRY AGAIN</button>
+            `;
+
+            instructions.style.display = 'block';
+            document.getElementById('start-mission').addEventListener('click', () => {
+                instructions.style.display = 'none';
+                missionStarted = true;
+
+                // Reset oxygen
+                oxygen = 100;
+                document.getElementById('oxygen-percent').textContent = oxygen;
+                document.getElementById('oxygen-fill').style.width = '100%';
+
+                // Start game loop again
+                requestAnimationFrame(gameLoop);
+            });
+        }
+
+        // 3D rendering functions
+        function projectPoint(point) {
+            // Simple 3D to 2D projection
+            const scale = 500 / (point.z + 5);
+            return {
+                x: canvas.width / 2 + point.x * scale,
+                y: canvas.height / 2 + point.y * scale,
+                scale: scale
+            };
+        }
+
+        function rotatePoint(point, rotation) {
+            // Rotate around X axis
+            const cosX = Math.cos(rotation.x);
+            const sinX = Math.sin(rotation.x);
+            const y1 = point.y * cosX - point.z * sinX;
+            const z1 = point.y * sinX + point.z * cosX;
+
+            // Rotate around Y axis
+            const cosY = Math.cos(rotation.y);
+            const sinY = Math.sin(rotation.y);
+            const x2 = point.x * cosY + z1 * sinY;
+            const z2 = -point.x * sinY + z1 * cosY;
+
+            return {
+                x: x2,
+                y: y1,
+                z: z2
+            };
+        }
+
+        function drawCube(cube) {
+            // Transform cube position relative to camera
+            const transformed = {
+                x: cube.x - position.x,
+                y: cube.y - position.y,
+                z: cube.z - position.z
+            };
+
+            // Rotate cube based on camera rotation
+            const rotated = rotatePoint(transformed, rotation);
+
+            // Don't draw if behind camera
+            if (rotated.z < 0) return;
+
+            // Project 3D to 2D
+            const projected = projectPoint(rotated);
+            const size = cube.width * projected.scale;
+
+            // Draw cube (simplified as a rectangle)
+            ctx.fillStyle = cube.color;
+            ctx.fillRect(
+                projected.x - size / 2,
+                projected.y - size / 2,
+                size,
+                size
+            );
+
+            // Add simple shading
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(
+                projected.x - size / 2,
+                projected.y - size / 2,
+                size,
+                size
+            );
+        }
+
+        // Game loop
+        function gameLoop() {
+            if (!missionStarted) return;
+
+            // Clear canvas
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw stars
+            ctx.fillStyle = 'white';
+            stars.forEach(star => {
+                const transformed = {
+                    x: star.x - position.x,
+                    y: star.y - position.y,
+                    z: star.z - position.z
+                };
+
+                const rotated = rotatePoint(transformed, rotation);
+
+                if (rotated.z > 0) {
+                    const projected = projectPoint(rotated);
+                    const size = star.size * (500 / (rotated.z + 5));
+
+                    ctx.beginPath();
+                    ctx.arc(projected.x, projected.y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+
+            // Draw space objects
+            spaceObjects.forEach(obj => {
+                drawCube(obj);
+            });
+
+            // Apply controls to velocity (zero-g physics)
+            const acceleration = 0.005;
+            const damping = 0.98;
+
+            if (controls.forward) velocity.z -= acceleration;
+            if (controls.back) velocity.z += acceleration;
+            if (controls.left) velocity.x -= acceleration;
+            if (controls.right) velocity.x += acceleration;
+            if (controls.up) velocity.y += acceleration;
+            if (controls.down) velocity.y -= acceleration;
+
+            // Apply velocity to position
+            position.x += velocity.x;
+            position.y += velocity.y;
+            position.z += velocity.z;
+
+            // Apply damping (simulate zero-g inertia)
+            velocity.x *= damping;
+            velocity.y *= damping;
+            velocity.z *= damping;
+
+            // Update velocity display
+            const speed = Math.sqrt(velocity.x ** 2 + velocity.y ** 2 + velocity.z ** 2);
+            document.getElementById('velocity').textContent = speed.toFixed(1);
+
+            requestAnimationFrame(gameLoop);
+        }
+    </script>
+</body>
+
+</html>

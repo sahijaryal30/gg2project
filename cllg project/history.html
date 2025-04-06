@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Explorers Timeline</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+         :root {
+            --primary-color: #0b3d91;
+            --secondary-color: #fc3d21;
+            --light-color: #ffffff;
+            --dark-color: #1a1a1a;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: var(--light-color);
+            padding: 1rem;
+            text-align: center;
+            position: relative;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .tab-btn {
+            padding: 0.5rem 1rem;
+            margin: 0 0.5rem;
+            background: none;
+            border: none;
+            color: var(--light-color);
+            cursor: pointer;
+            font-size: 1rem;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-btn.active {
+            border-bottom: 2px solid var(--secondary-color);
+            color: var(--secondary-color);
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 1rem;
+            background-color: var(--light-color);
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .timeline {
+            position: relative;
+            max-width: 1200px;
+            margin: 2rem auto;
+        }
+        
+        .timeline::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            background-color: var(--primary-color);
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            margin-left: -3px;
+        }
+        
+        .timeline-item {
+            padding: 10px 40px;
+            position: relative;
+            width: 50%;
+            box-sizing: border-box;
+        }
+        
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            background-color: var(--light-color);
+            border: 4px solid var(--secondary-color);
+            border-radius: 50%;
+            top: 15px;
+            z-index: 1;
+        }
+        
+        .left {
+            left: 0;
+        }
+        
+        .right {
+            left: 50%;
+        }
+        
+        .left::after {
+            right: -12px;
+        }
+        
+        .right::after {
+            left: -12px;
+        }
+        
+        .timeline-content {
+            padding: 20px;
+            background-color: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .profile-card {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .profile-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .profile-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .profile-info {
+            padding: 1rem;
+        }
+        
+        .profile-info h3 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .profile-info p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        #mission-map {
+            height: 500px;
+            width: 100%;
+            margin: 1rem 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .mission-controls {
+            display: flex;
+            justify-content: center;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .mission-btn {
+            padding: 0.5rem 1rem;
+            margin: 0.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        .mission-btn:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        footer {
+            background-color: var(--dark-color);
+            color: var(--light-color);
+            text-align: center;
+            padding: 1rem;
+            margin-top: 2rem;
+        }
+        
+        @media screen and (max-width: 768px) {
+            .timeline::after {
+                left: 31px;
+            }
+            .timeline-item {
+                width: 100%;
+                padding-left: 70px;
+                padding-right: 25px;
+            }
+            .timeline-item::after {
+                left: 18px;
+            }
+            .left::after,
+            .right::after {
+                left: 18px;
+            }
+            .right {
+                left: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <h1>Space Explorers</h1>
+            <p>A journey through human spaceflight history</p>
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="timeline">Timeline</button>
+                <button class="tab-btn" data-tab="profiles">Profiles</button>
+                <button class="tab-btn" data-tab="missions">Missions</button>
+                <button class="tab-btn" data-tab="events">Notable Events</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="timeline" class="tab-content active">
+            <h2>Space Exploration Timeline</h2>
+            <div class="timeline">
+                <div class="timeline-item left">
+                    <div class="timeline-content">
+                        <h3>April 12, 1961</h3>
+                        <p>Yuri Gagarin becomes the first human in space aboard Vostok 1, completing one orbit around Earth.</p>
+                    </div>
+                </div>
+                <div class="timeline-item right">
+                    <div class="timeline-content">
+                        <h3>June 16, 1963</h3>
+                        <p>Valentina Tereshkova becomes the first woman in space aboard Vostok 6.</p>
+                    </div>
+                </div>
+                <div class="timeline-item left">
+                    <div class="timeline-content">
+                        <h3>July 20, 1969</h3>
+                        <p>Neil Armstrong and Buzz Aldrin become the first humans to walk on the Moon during Apollo 11 mission.</p>
+                    </div>
+                </div>
+                <div class="timeline-item right">
+                    <div class="timeline-content">
+                        <h3>April 2, 1984</h3>
+                        <p>Rakesh Sharma becomes the first Indian citizen in space aboard Soyuz T-11.</p>
+                    </div>
+                </div>
+                <div class="timeline-item left">
+                    <div class="timeline-content">
+                        <h3>April 28, 2001</h3>
+                        <p>Dennis Tito becomes the first space tourist, visiting the ISS aboard a Soyuz spacecraft.</p>
+                    </div>
+                </div>
+                <div class="timeline-item right">
+                    <div class="timeline-content">
+                        <h3>February 1, 2003</h3>
+                        <p>Space Shuttle Columbia disintegrates during re-entry, claiming the lives of all seven crew members including Kalpana Chawla.</p>
+                    </div>
+                </div>
+                <div class="timeline-item left">
+                    <div class="timeline-content">
+                        <h3>2020-Present</h3>
+                        <p>Commercial spaceflight era begins with SpaceX Crew Dragon missions and private space tourism flights.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="profiles" class="tab-content">
+            <h2>Famous Space Travelers</h2>
+            <div class="profile-grid">
+                <div class="profile-card">
+                    <img src="assets/image/Yuri.jpg" alt="Yuri Gagarin" class="profile-img">
+                    <div class="profile-info">
+                        <h3>Yuri Gagarin</h3>
+                        <p><strong>Nationality:</strong> Soviet</p>
+                        <p><strong>Mission:</strong> Vostok 1 (1961)</p>
+                        <p>First human to journey into outer space and orbit the Earth.</p>
+                    </div>
+                </div>
+                <div class="profile-card">
+                    <img src="assets/image/img2.jpg" alt="Valentina Tereshkova" class="profile-img">
+                    <div class="profile-info">
+                        <h3>Valentina Tereshkova</h3>
+                        <p><strong>Nationality:</strong> Soviet</p>
+                        <p><strong>Mission:</strong> Vostok 6 (1963)</p>
+                        <p>First woman in space, completing 48 orbits of Earth in 3 days.</p>
+                    </div>
+                </div>
+                <div class="profile-card">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/d/dc/Buzz_Aldrin.jpg" alt="Buzz Aldrin" class="profile-img">
+                    <div class="profile-info">
+                        <h3>Buzz Aldrin</h3>
+                        <p><strong>Nationality:</strong> American</p>
+                        <p><strong>Mission:</strong> Apollo 11 (1969)</p>
+                        <p>Second person to walk on the Moon. Pilot of the lunar module Eagle.</p>
+                    </div>
+                </div>
+                <div class="profile-card">
+                    <img src="assets/image/kalpana.jpg" alt="Kalpana Chawla" class="profile-img">
+                    <div class="profile-info">
+                        <h3>Kalpana Chawla</h3>
+                        <p><strong>Nationality:</strong> Indian-American</p>
+                        <p><strong>Missions:</strong> STS-87, STS-107</p>
+                        <p>First woman of Indian origin in space. Died in the Columbia disaster.</p>
+                    </div>
+                </div>
+                <div class="profile-card">
+                    <img src="assets/image/RakeshSharma.webp" alt="Rakesh Sharma" class="profile-img">
+                    <div class="profile-info">
+                        <h3>Rakesh Sharma</h3>
+                        <p><strong>Nationality:</strong> Indian</p>
+                        <p><strong>Mission:</strong> Soyuz T-11 (1984)</p>
+                        <p>First Indian citizen in space. Spent 7 days, 21 hours aboard Salyut 7.</p>
+                    </div>
+                </div>
+                <div class="profile-card">
+                    <img src="assets/image/danis.jpg" alt="Dennis Tito" class="profile-img">
+                    <div class="profile-info">
+                        <h3>Dennis Tito</h3>
+                        <p><strong>Nationality:</strong> American</p>
+                        <p><strong>Mission:</strong> Soyuz TM-32 (2001)</p>
+                        <p>First space tourist, paid $20 million for his trip to the ISS.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="missions" class="tab-content">
+            <h2>Space Missions Map</h2>
+            <div class="mission-controls">
+                <button class="mission-btn" data-mission="moon">Moon Missions</button>
+                <button class="mission-btn" data-mission="iss">ISS Missions</button>
+                <button class="mission-btn" data-mission="mars">Mars Missions</button>
+                <button class="mission-btn" data-mission="all">All Missions</button>
+            </div>
+            <div id="mission-map"></div>
+        </div>
+
+        <div id="events" class="tab-content">
+            <h2>Notable Events in Space History</h2>
+            <div class="events-list">
+                <div class="event-card">
+                    <h3>First Human in Space (1961)</h3>
+                    <p>Yuri Gagarin's historic flight aboard Vostok 1 marked the beginning of human spaceflight.</p>
+                </div>
+                <div class="event-card">
+                    <h3>First Woman in Space (1963)</h3>
+                    <p>Valentina Tereshkova proved that space was accessible to women as well as men.</p>
+                </div>
+                <div class="event-card">
+                    <h3>First Moon Landing (1969)</h3>
+                    <p>Apollo 11's successful landing fulfilled President Kennedy's challenge and marked a pinnacle of human achievement.</p>
+                </div>
+                <div class="event-card">
+                    <h3>First Space Station (1971)</h3>
+                    <p>Salyut 1 became humanity's first space station, paving the way for permanent human presence in space.</p>
+                </div>
+                <div class="event-card">
+                    <h3>First Space Shuttle Flight (1981)</h3>
+                    <p>Columbia's maiden voyage began the era of reusable spacecraft.</p>
+                </div>
+                <div class="event-card">
+                    <h3>First Indian in Space (1984)</h3>
+                    <p>Rakesh Sharma's mission aboard Soyuz T-11 marked India's entry into human spaceflight.</p>
+                </div>
+                <div class="event-card">
+                    <h3>First Space Tourist (2001)</h3>
+                    <p>Dennis Tito's trip to the ISS opened the door for commercial space travel.</p>
+                </div>
+                <div class="event-card">
+                    <h3>First Private Crewed Spaceflight (2020)</h3>
+                    <p>SpaceX's Crew Dragon Demo-2 mission marked the beginning of a new era in commercial spaceflight.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 Space Explorers Timeline | Data sourced from NASA and other space agencies</p>
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // Tab functionality
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabId = btn.getAttribute('data-tab');
+
+                // Remove active class from all buttons and contents
+                tabBtns.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+
+                // Add active class to clicked button and corresponding content
+                btn.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+
+                // Initialize map when missions tab is activated
+                if (tabId === 'missions' && !window.mapInitialized) {
+                    initMap();
+                    window.mapInitialized = true;
+                }
+            });
+        });
+
+        // Mission map functionality
+        function initMap() {
+            const map = L.map('mission-map').setView([20, 0], 2);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // Mission markers (simplified for demo)
+            const missions = {
+                moon: [{
+                    name: "Apollo 11",
+                    lat: 0.6741,
+                    lng: 23.4730,
+                    desc: "First manned Moon landing (1969)"
+                }, {
+                    name: "Apollo 17",
+                    lat: 20.1908,
+                    lng: 30.7717,
+                    desc: "Last Apollo Moon mission (1972)"
+                }],
+                iss: [{
+                    name: "ISS",
+                    lat: 51.6,
+                    lng: 0.0,
+                    desc: "International Space Station (since 1998)"
+                }, {
+                    name: "Soyuz TM-32",
+                    lat: 45.0,
+                    lng: 60.0,
+                    desc: "First space tourist mission (2001)"
+                }],
+                mars: [{
+                    name: "Perseverance",
+                    lat: 18.4447,
+                    lng: 77.4508,
+                    desc: "Mars rover landing (2021)"
+                }, {
+                    name: "Curiosity",
+                    lat: -4.5895,
+                    lng: 137.4417,
+                    desc: "Mars rover landing (2012)"
+                }]
+            };
+
+            let currentMarkers = [];
+
+            // Mission button functionality
+            const missionBtns = document.querySelectorAll('.mission-btn');
+            missionBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const missionType = btn.getAttribute('data-mission');
+
+                    // Clear existing markers
+                    currentMarkers.forEach(marker => map.removeLayer(marker));
+                    currentMarkers = [];
+
+                    // Add new markers based on selection
+                    if (missionType === 'all') {
+                        Object.values(missions).forEach(missionGroup => {
+                            missionGroup.forEach(mission => {
+                                const marker = L.marker([mission.lat, mission.lng])
+                                    .addTo(map)
+                                    .bindPopup(`<b>${mission.name}</b><br>${mission.desc}`);
+                                currentMarkers.push(marker);
+                            });
+                        });
+                    } else if (missions[missionType]) {
+                        missions[missionType].forEach(mission => {
+                            const marker = L.marker([mission.lat, mission.lng])
+                                .addTo(map)
+                                .bindPopup(`<b>${mission.name}</b><br>${mission.desc}`);
+                            currentMarkers.push(marker);
+                        });
+                    }
+                });
+            });
+
+            // Trigger "All Missions" by default
+            document.querySelector('.mission-btn[data-mission="all"]').click();
+        }
+    </script>
+</body>
+
+</html>

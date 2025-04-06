@@ -1,0 +1,289 @@
+<div class="feedback-container">
+    <div class="feedback-header">
+        <h2>We'd Love Your Feedback</h2>
+        <p>Your opinion helps us improve our services</p>
+    </div>
+
+    <form id="feedbackForm" class="feedback-form">
+        <div class="form-group">
+            <label for="name">Your Name (optional)</label>
+            <input type="text" id="name" class="form-control" placeholder="John Doe">
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email (optional)</label>
+            <input type="email" id="email" class="form-control" placeholder="your@email.com">
+        </div>
+
+        <div class="form-group">
+            <label>How would you rate your experience?</label>
+            <div class="rating-container">
+                <div class="rating-option">
+                    <input type="radio" id="rating-5" name="rating" value="5">
+                    <label for="rating-5">
+                        <div class="rating-stars">★★★★★</div>
+                        Excellent
+                    </label>
+                </div>
+                <div class="rating-option">
+                    <input type="radio" id="rating-4" name="rating" value="4">
+                    <label for="rating-4">
+                        <div class="rating-stars">★★★★☆</div>
+                        Good
+                    </label>
+                </div>
+                <div class="rating-option">
+                    <input type="radio" id="rating-3" name="rating" value="3">
+                    <label for="rating-3">
+                        <div class="rating-stars">★★★☆☆</div>
+                        Average
+                    </label>
+                </div>
+                <div class="rating-option">
+                    <input type="radio" id="rating-2" name="rating" value="2">
+                    <label for="rating-2">
+                        <div class="rating-stars">★★☆☆☆</div>
+                        Poor
+                    </label>
+                </div>
+                <div class="rating-option">
+                    <input type="radio" id="rating-1" name="rating" value="1">
+                    <label for="rating-1">
+                        <div class="rating-stars">★☆☆☆☆</div>
+                        Terrible
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="comments">Your Feedback</label>
+            <textarea id="comments" class="form-control" placeholder="What did you like or dislike? How can we improve?" required></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn">Submit Feedback</button>
+    </form>
+
+    <div class="feedback-success">
+        <div class="success-icon">✓</div>
+        <h3>Thank You for Your Feedback!</h3>
+        <p>We appreciate you taking the time to share your experience with us.</p>
+        <button class="submit-btn" onclick="resetForm()">Submit Another Feedback</button>
+    </div>
+</div>
+
+<style>
+    .feedback-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    
+    .feedback-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .feedback-header h2 {
+        font-size: 2rem;
+        color: var(--primary-color, #4285f4);
+        margin-bottom: 0.5rem;
+    }
+    
+    .feedback-header p {
+        font-size: 1.1rem;
+        color: #666;
+    }
+    
+    .feedback-form {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--light-gray, #e9ecef);
+        border-radius: 4px;
+        font-size: 1rem;
+        transition: border 0.3s ease;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color, #4285f4);
+        box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+    }
+    
+    textarea.form-control {
+        min-height: 150px;
+        resize: vertical;
+    }
+    
+    .rating-container {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+    
+    .rating-option {
+        text-align: center;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+    
+    .rating-option:hover {
+        background-color: var(--light-gray, #e9ecef);
+    }
+    
+    .rating-option input {
+        display: none;
+    }
+    
+    .rating-option label {
+        cursor: pointer;
+        display: block;
+    }
+    
+    .rating-option input:checked+label {
+        color: var(--primary-color, #4285f4);
+        font-weight: bold;
+    }
+    
+    .rating-stars {
+        font-size: 1.5rem;
+        color: #ffc107;
+        margin-bottom: 0.5rem;
+    }
+    
+    .submit-btn {
+        background-color: var(--primary-color, #4285f4);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        display: block;
+        width: 100%;
+    }
+    
+    .submit-btn:hover {
+        background-color: var(--primary-hover, #3367d6);
+    }
+    
+    .feedback-success {
+        text-align: center;
+        padding: 2rem;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        max-width: 800px;
+        margin: 0 auto;
+        display: none;
+    }
+    
+    .feedback-success h3 {
+        color: var(--success-color, #28a745);
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+    }
+    
+    .feedback-success p {
+        margin-bottom: 1.5rem;
+    }
+    
+    .success-icon {
+        font-size: 3rem;
+        color: var(--success-color, #28a745);
+        margin-bottom: 1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .feedback-container {
+            padding: 0 0.5rem;
+        }
+        .feedback-header h2 {
+            font-size: 1.5rem;
+        }
+        .feedback-form {
+            padding: 1.5rem;
+        }
+        .rating-container {
+            flex-wrap: wrap;
+        }
+        .rating-option {
+            width: 50%;
+            margin-bottom: 0.5rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .feedback-header h2 {
+            font-size: 1.3rem;
+        }
+        .feedback-form {
+            padding: 1rem;
+        }
+        .rating-option {
+            width: 100%;
+        }
+    }
+</style>
+
+<script>
+    document.getElementById('feedbackForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Here you would typically send the form data to your server
+        // For demonstration, we'll just show the success message
+
+        // Hide the form
+        document.querySelector('.feedback-form').style.display = 'none';
+        // Show success message
+        document.querySelector('.feedback-success').style.display = 'block';
+
+        // You could add AJAX code here to submit the form data
+        /*
+        const formData = new FormData(this);
+        fetch('/submit-feedback', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.querySelector('.feedback-form').style.display = 'none';
+            document.querySelector('.feedback-success').style.display = 'block';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+        */
+    });
+
+    function resetForm() {
+        // Hide success message
+        document.querySelector('.feedback-success').style.display = 'none';
+        // Show form
+        document.querySelector('.feedback-form').style.display = 'block';
+        // Reset form
+        document.getElementById('feedbackForm').reset();
+    }
+</script>

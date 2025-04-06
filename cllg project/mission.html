@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Missions Timeline</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
+    <style>
+         :root {
+            --primary: #0b3d91;
+            --secondary: #fc3d21;
+            --accent: #1a8fe3;
+            --light: #e6f7ff;
+            --dark: #011627;
+        }
+        
+        body {
+            font-family: 'Space Mono', monospace;
+            margin: 0;
+            padding: 0;
+            background-color: var(--dark);
+            color: var(--light);
+            line-height: 1.6;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--dark));
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            font-family: 'Orbitron', sans-serif;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .timeline {
+            position: relative;
+            padding: 50px 0;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            width: 4px;
+            background: var(--accent);
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .mission {
+            padding: 20px;
+            position: relative;
+            width: 50%;
+            box-sizing: border-box;
+            margin-bottom: 40px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+        
+        .mission.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .mission:nth-child(odd) {
+            left: 0;
+            text-align: right;
+            padding-right: 70px;
+        }
+        
+        .mission:nth-child(even) {
+            left: 50%;
+            text-align: left;
+            padding-left: 70px;
+        }
+        
+        .mission::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: var(--secondary);
+            border-radius: 50%;
+            top: 30px;
+        }
+        
+        .mission:nth-child(odd)::after {
+            right: -10px;
+        }
+        
+        .mission:nth-child(even)::after {
+            left: -10px;
+        }
+        
+        .mission-content {
+            background: rgba(11, 61, 145, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+            border: 1px solid var(--accent);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .mission h2 {
+            color: var(--secondary);
+            margin-top: 0;
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        .mission-date {
+            font-weight: bold;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+        
+        .mission-status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .status-success {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .status-failure {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .status-planned {
+            background-color: #FFC107;
+            color: black;
+        }
+        
+        .status-ongoing {
+            background-color: #2196F3;
+            color: white;
+        }
+        
+        .model-container {
+            width: 100%;
+            height: 300px;
+            margin: 15px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        
+        .media-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .media-item {
+            flex: 1 1 200px;
+            height: 150px;
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .media-item img,
+        .media-item iframe {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .mission-description {
+            margin-bottom: 15px;
+        }
+        
+        .mission-highlights {
+            margin-top: 15px;
+            padding-left: 20px;
+        }
+        
+        .mission-highlights li {
+            margin-bottom: 5px;
+        }
+        
+        .filter-controls {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(1, 22, 39, 0.8);
+            border-radius: 8px;
+        }
+        
+        .filter-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 20px;
+            background: var(--primary);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Space Mono', monospace;
+        }
+        
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: var(--primary);
+            color: white;
+            margin-top: 50px;
+        }
+        
+        @media (max-width: 768px) {
+            .timeline::before {
+                left: 31px;
+            }
+            .mission {
+                width: 100%;
+                padding-left: 70px;
+                padding-right: 20px;
+                text-align: left;
+            }
+            .mission:nth-child(even) {
+                left: 0;
+            }
+            .mission::after {
+                left: 21px !important;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            .model-container {
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <h1>Space Exploration Timeline</h1>
+            <p>Historic and upcoming missions that shaped our journey to the stars</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="filter-controls">
+            <button class="filter-btn active" data-filter="all">All Missions</button>
+            <button class="filter-btn" data-filter="moon">Moon Missions</button>
+            <button class="filter-btn" data-filter="mars">Mars Missions</button>
+            <button class="filter-btn" data-filter="crew">Crewed Missions</button>
+            <button class="filter-btn" data-filter="future">Future Missions</button>
+        </div>
+
+        <div class="timeline">
+            <!-- Apollo 11 -->
+            <div class="mission" data-categories="moon crew">
+                <div class="mission-content">
+                    <h2>Apollo 11</h2>
+                    <div class="mission-date">July 16-24, 1969</div>
+                    <span class="mission-status status-success">Success</span>
+                    <div class="mission-description">
+                        The first crewed mission to land on the Moon. Neil Armstrong and Buzz Aldrin became the first humans to walk on the lunar surface while Michael Collins orbited above.
+                    </div>
+                    <div class="model-container" id="apollo11-model"></div>
+                    <div class="media-container">
+                        <div class="media-item">
+                            <img src="https://images-assets.nasa.gov/image/AS11-40-5875/AS11-40-5875~orig.jpg" alt="Apollo 11 astronauts on the Moon">
+                        </div>
+                        <div class="media-item">
+                            <iframe src="https://www.youtube.com/embed/S9HdPi9Ikhk" frameborder="0" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                    <ul class="mission-highlights">
+                        <li>First human footsteps on the Moon</li>
+                        <li>Collected 21.5 kg of lunar material</li>
+                        <li>Deployed scientific instruments</li>
+                        <li>"That's one small step..." broadcast to 650 million viewers</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Voyager 1 -->
+            <div class="mission" data-categories="probe">
+                <div class="mission-content">
+                    <h2>Voyager 1</h2>
+                    <div class="mission-date">Launched: September 5, 1977</div>
+                    <span class="mission-status status-ongoing">Ongoing</span>
+                    <div class="mission-description">
+                        The farthest human-made object from Earth, Voyager 1 entered interstellar space in 2012. It carries the Golden Record with sounds and images from Earth.
+                    </div>
+                    <div class="model-container" id="voyager1-model"></div>
+                    <div class="media-container">
+                        <div class="media-item">
+                            <img src="https://images-assets.nasa.gov/image/PIA17046/PIA17046~orig.jpg" alt="Voyager 1 in space">
+                        </div>
+                        <div class="media-item">
+                            <iframe src="https://www.youtube.com/embed/4XQkf4kW7Y4" frameborder="0" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                    <ul class="mission-highlights">
+                        <li>First spacecraft to enter interstellar space</li>
+                        <li>Still communicating with Earth from over 14 billion miles away</li>
+                        <li>Famous "Pale Blue Dot" photo of Earth</li>
+                        <li>Expected to continue operating until about 2025</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Mars Pathfinder -->
+            <div class="mission" data-categories="mars">
+                <div class="mission-content">
+                    <h2>Mars Pathfinder</h2>
+                    <div class="mission-date">July 4, 1997 - March 10, 1998</div>
+                    <span class="mission-status status-success">Success</span>
+                    <div class="mission-description">
+                        Delivered the first rover (Sojourner) to Mars, demonstrating a low-cost method for delivering science payloads to the Martian surface.
+                    </div>
+                    <div class="model-container" id="pathfinder-model"></div>
+                    <div class="media-container">
+                        <div class="media-item">
+                            <img src="https://images-assets.nasa.gov/image/PIA00996/PIA00996~orig.jpg" alt="Mars Pathfinder on surface">
+                        </div>
+                        <div class="media-item">
+                            <iframe src="https://www.youtube.com/embed/HqQpL5KX5X4" frameborder="0" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                    <ul class="mission-highlights">
+                        <li>First successful Mars rover mission</li>
+                        <li>Airbag landing system innovation</li>
+                        <li>Returned 2.3 billion bits of information</li>
+                        <li>Operated 3 times longer than planned</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- SpaceX Falcon Heavy -->
+            <div class="mission" data-categories="future">
+                <div class="mission-content">
+                    <h2>SpaceX Falcon Heavy</h2>
+                    <div class="mission-date">First launch: February 6, 2018</div>
+                    <span class="mission-status status-success">Success</span>
+                    <div class="mission-description">
+                        The most powerful operational rocket in the world by a factor of two, capable of lifting nearly 64 metric tons into orbit.
+                    </div>
+                    <div class="model-container" id="falconheavy-model"></div>
+                    <div class="media-container">
+                        <div class="media-item">
+                            <img src="https://images-assets.nasa.gov/image/KSC-20180206-PH-SX01_0001/KSC-20180206-PH-SX01_0001~orig.jpg" alt="Falcon Heavy launch">
+                        </div>
+                        <div class="media-item">
+                            <iframe src="https://www.youtube.com/embed/wbSwFU6tY1c" frameborder="0" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                    <ul class="mission-highlights">
+                        <li>First launch carried Elon Musk's Tesla Roadster into space</li>
+                        <li>Partial reusability with booster landings</li>
+                        <li>27 Merlin engines generating 5 million pounds of thrust</li>
+                        <li>Will be used for NASA's Artemis program lunar missions</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Artemis I -->
+            <div class="mission" data-categories="moon future">
+                <div class="mission-content">
+                    <h2>Artemis I</h2>
+                    <div class="mission-date">November 16, 2022</div>
+                    <span class="mission-status status-success">Success</span>
+                    <div class="mission-description">
+                        The first integrated flight test of NASA's deep space exploration system: the Orion spacecraft, Space Launch System (SLS) rocket, and ground systems.
+                    </div>
+                    <div class="model-container" id="artemis1-model"></div>
+                    <div class="media-container">
+                        <div class="media-item">
+                            <img src="https://images-assets.nasa.gov/image/KSC-20221116-PH-SPX01_0001/KSC-20221116-PH-SPX01_0001~orig.jpg" alt="Artemis I launch">
+                        </div>
+                        <div class="media-item">
+                            <iframe src="https://www.youtube.com/embed/CMLD0Lp0JBg" frameborder="0" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                    <ul class="mission-highlights">
+                        <li>Uncrewed test flight around the Moon</li>
+                        <li>Orion traveled 1.4 million miles over 25.5 days</li>
+                        <li>Verified heat shield performance during re-entry</li>
+                        <li>Paving the way for crewed Artemis II mission</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Perseverance Rover -->
+            <div class="mission" data-categories="mars">
+                <div class="mission-content">
+                    <h2>Mars Perseverance Rover</h2>
+                    <div class="mission-date">Landed: February 18, 2021</div>
+                    <span class="mission-status status-ongoing">Ongoing</span>
+                    <div class="mission-description">
+                        NASA's most advanced Mars rover to date, searching for signs of ancient microbial life and collecting samples for future return to Earth.
+                    </div>
+                    <div class="model-container" id="perseverance-model"></div>
+                    <div class="media-container">
+                        <div class="media-item">
+                            <img src="https://images-assets.nasa.gov/image/PIA24428/PIA24428~orig.jpg" alt="Perseverance rover on Mars">
+                        </div>
+                        <div class="media-item">
+                            <iframe src="https://www.youtube.com/embed/4czjS9h4Fpg" frameborder="0" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                    <ul class="mission-highlights">
+                        <li>Carried the Ingenuity helicopter - first powered flight on another planet</li>
+                        <li>Drilling and caching samples for Mars Sample Return</li>
+                        <li>MOXIE experiment producing oxygen from CO₂</li>
+                        <li>Advanced cameras and microphones recording Mars</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Artemis III -->
+            <div class="mission" data-categories="moon crew future">
+                <div class="mission-content">
+                    <h2>Artemis III</h2>
+                    <div class="mission-date">Planned: 2025</div>
+                    <span class="mission-status status-planned">Planned</span>
+                    <div class="mission-description">
+                        NASA's mission to return humans to the lunar surface, including the first woman and first person of color to walk on the Moon.
+                    </div>
+                    <div class="model-container" id="artemis3-model"></div>
+                    <div class="media-container">
+                        <div class="media-item">
+                            <img src="https://images-assets.nasa.gov/image/artemis-iii-surface-concept-1/artemis-iii-surface-concept-1~orig.jpg" alt="Artemis III concept">
+                        </div>
+                        <div class="media-item">
+                            <iframe src="https://www.youtube.com/embed/qlH_5xIQtY8" frameborder="0" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                    <ul class="mission-highlights">
+                        <li>First crewed lunar landing since 1972</li>
+                        <li>Targeting lunar south pole region</li>
+                        <li>SpaceX Starship selected as lunar lander</li>
+                        <li>Building toward sustainable lunar presence</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- James Webb Space Telescope -->
+            <div class="mission" data-categories="probe">
+                <div class="mission-content">
+                    <h2>James Webb Space Telescope</h2>
+                    <div class="mission-date">Launched: December 25, 2021</div>
+                    <span class="mission-status status-ongoing">Ongoing</span>
+                    <div class="mission-description">
+                        The premier observatory of the next decade, Webb is studying every phase in the history of our Universe from the first luminous glows to the formation of galaxies, stars, and planets.
+                    </div>
+                    <div class="model-container" id="jwst-model"></div>
+                    <div class="media-container">
+                        <div class="media-item">
+                            <img src="https://images-assets.nasa.gov/image/webb-first-images-carinanebula/webb-first-images-carinanebula~orig.jpg" alt="JWST Carina Nebula">
+                        </div>
+                        <div class="media-item">
+                            <iframe src="https://www.youtube.com/embed/7nT7JGZMbtM" frameborder="0" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                    <ul class="mission-highlights">
+                        <li>Largest and most complex space telescope ever built</li>
+                        <li>Operating at L2 point 1 million miles from Earth</li>
+                        <li>Already revolutionized infrared astronomy</li>
+                        <li>Expected 10+ year mission duration</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>Space Missions Timeline &copy; 2023 | Data sourced from NASA and SpaceX</p>
+            <p>3D models are simplified representations - not to scale</p>
+        </div>
+    </footer>
+
+    <script>
+        // Intersection Observer for scroll animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, {
+            threshold: 0.1
+        });
+
+        document.querySelectorAll('.mission').forEach(mission => {
+            observer.observe(mission);
+        });
+
+        // Filter functionality
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        filterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Update active button
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                const filter = button.dataset.filter;
+                const missions = document.querySelectorAll('.mission');
+
+                missions.forEach(mission => {
+                    if (filter === 'all') {
+                        mission.style.display = 'block';
+                    } else {
+                        const categories = mission.dataset.categories.split(' ');
+                        if (categories.includes(filter)) {
+                            mission.style.display = 'block';
+                        } else {
+                            mission.style.display = 'none';
+                        }
+                    }
+                });
+            });
+        });
+
+        // 3D Model Loaders
+        function initModel(containerId, modelPath, scale = [1, 1, 1], position = [0, 0, 0]) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            const width = container.offsetWidth;
+            const height = container.offsetHeight;
+
+            // Scene setup
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x011627);
+
+            // Camera
+            const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+            camera.position.z = 5;
+
+            // Renderer
+            const renderer = new THREE.WebGLRenderer({
+                antialias: true,
+                alpha: true
+            });
+            renderer.setSize(width, height);
+            container.appendChild(renderer.domElement);
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+
+            // Controls
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.25;
+            controls.enableZoom = false;
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 0.5;
+
+            // Model loading (simplified - in reality you would load actual 3D models)
+            // For demo purposes, we'll just create simple geometries
+
+            let model;
+
+            switch (containerId) {
+                case 'apollo11-model':
+                    // Create simplified Apollo 11 model
+                    const commandModule = new THREE.Mesh(
+                        new THREE.ConeGeometry(0.5, 1, 4),
+                        new THREE.MeshPhongMaterial({
+                            color: 0xffffff
+                        })
+                    );
+                    commandModule.rotation.x = Math.PI;
+
+                    const serviceModule = new THREE.Mesh(
+                        new THREE.CylinderGeometry(0.5, 0.5, 1.5, 8),
+                        new THREE.MeshPhongMaterial({
+                            color: 0xcccccc
+                        })
+                    );
+                    serviceModule.position.y = -1;
+
+                    const lunarModule = new THREE.Group();
+                    const descentStage = new THREE.Mesh(
+                        new THREE.BoxGeometry(1, 0.3, 1),
+                        new THREE.MeshPhongMaterial({
+                            color: 0x999999
+                        })
+                    );
+                    const ascentStage = new THREE.Mesh(
+                        new THREE.ConeGeometry(0.3, 0.7, 4),
+                        new THREE.MeshPhongMaterial({
+                            color: 0xdddddd
+                        })
+                    );
+                    ascentStage.position.y = 0.5;
+
+                    lunarModule.add(descentStage);
+                    lunarModule.add(ascentStage);
+                    lunarModule.position.set(1.5, 0, 0);
+
+                    model = new THREE.Group();
+                    model.add(commandModule);
+                    model.add(serviceModule);
+                    model.add(lunarModule);
+                    break;
+
+                case 'perseverance-model':
+                    // Create simplified Perseverance rover
+                    const body = new THREE.Mesh(
+                        new THREE.BoxGeometry(1.5, 0.5, 1.5),
+                        new THREE.MeshPhongMaterial({
+                            color: 0xcc3333
+                        })
+                    );
+
+                    const mast = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.2, 0.6, 0.2),
+                        new THREE.MeshPhongMaterial({
+                            color: 0x666666
+                        })
+                    );
+                    mast.position.set(0, 0.55, 0.3);
+
+                    const wheels = [];
+                    for (let i = 0; i < 6; i++) {
+                        const wheel = new THREE.Mesh(
+                            new THREE.CylinderGeometry(0.2, 0.2, 0.1, 16),
+                            new THREE.MeshPhongMaterial({
+                                color: 0x333333
+                            })
+                        );
+                        wheel.rotation.z = Math.PI / 2;
+                        wheel.position.set((i - 2.5) * 0.4, -0.3, 0);
+                        wheels.push(wheel);
+                    }
+
+                    model = new THREE.Group();
+                    model.add(body);
+                    model.add(mast);
+                    wheels.forEach(wheel => model.add(wheel));
+                    break;
+
+                case 'falconheavy-model':
+                    // Create simplified Falcon Heavy
+                    const core = new THREE.Mesh(
+                        new THREE.CylinderGeometry(0.3, 0.3, 3, 8),
+                        new THREE.MeshPhongMaterial({
+                            color: 0xffffff
+                        })
+                    );
+
+                    const boosters = [];
+                    for (let i = 0; i < 2; i++) {
+                        const booster = new THREE.Mesh(
+                            new THREE.CylinderGeometry(0.2, 0.2, 2.5, 8),
+                            new THREE.MeshPhongMaterial({
+                                color: 0xffffff
+                            })
+                        );
+                        booster.position.set(i === 0 ? -0.5 : 0.5, 0, 0);
+                        boosters.push(booster);
+                    }
+
+                    const fairing = new THREE.Mesh(
+                        new THREE.ConeGeometry(0.5, 1.5, 4),
+                        new THREE.MeshPhongMaterial({
+                            color: 0xeeeeee
+                        })
+                    );
+                    fairing.position.y = 2;
+
+                    model = new THREE.Group();
+                    model.add(core);
+                    boosters.forEach(booster => model.add(booster));
+                    model.add(fairing);
+                    break;
+
+                default:
+                    // Default model - a simple satellite
+                    const mainBody = new THREE.Mesh(
+                        new THREE.BoxGeometry(1, 0.5, 1),
+                        new THREE.MeshPhongMaterial({
+                            color: 0x3399ff
+                        })
+                    );
+
+                    const solarPanel1 = new THREE.Mesh(
+                        new THREE.PlaneGeometry(2, 0.8),
+                        new THREE.MeshPhongMaterial({
+                            color: 0x333333,
+                            side: THREE.DoubleSide
+                        })
+                    );
+                    solarPanel1.rotation.y = Math.PI / 2;
+                    solarPanel1.position.x = -1.1;
+
+                    const solarPanel2 = solarPanel1.clone();
+                    solarPanel2.position.x = 1.1;
+
+                    const antenna = new THREE.Mesh(
+                        new THREE.ConeGeometry(0.1, 0.5, 8),
+                        new THREE.MeshPhongMaterial({
+                            color: 0x666666
+                        })
+                    );
+                    antenna.position.z = 0.6;
+                    antenna.rotation.x = Math.PI / 2;
+
+                    model = new THREE.Group();
+                    model.add(mainBody);
+                    model.add(solarPanel1);
+                    model.add(solarPanel2);
+                    model.add(antenna);
+            }
+
+            model.scale.set(...scale);
+            model.position.set(...position);
+            scene.add(model);
+
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+            }
+
+            animate();
+
+            // Handle resize
+            window.addEventListener('resize', () => {
+                const width = container.offsetWidth;
+                const height = container.offsetHeight;
+
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+                renderer.setSize(width, height);
+            });
+        }
+
+        // Initialize all models
+        document.addEventListener('DOMContentLoaded', () => {
+            initModel('apollo11-model', null, [0.8, 0.8, 0.8], [0, -0.5, 0]);
+            initModel('voyager1-model', null, [0.6, 0.6, 0.6], [0, 0, 0]);
+            initModel('pathfinder-model', null, [0.7, 0.7, 0.7], [0, -0.3, 0]);
+            initModel('falconheavy-model', null, [0.6, 0.6, 0.6], [0, -1, 0]);
+            initModel('artemis1-model', null, [0.7, 0.7, 0.7], [0, -0.5, 0]);
+            initModel('perseverance-model', null, [0.8, 0.8, 0.8], [0, -0.2, 0]);
+            initModel('artemis3-model', null, [0.7, 0.7, 0.7], [0, -0.5, 0]);
+            initModel('jwst-model', null, [0.8, 0.8, 0.8], [0, 0, 0]);
+        });
+    </script>
+</body>
+
+</html>

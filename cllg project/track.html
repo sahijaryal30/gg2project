@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Explorer Hub</title>
+    <!-- Leaflet for maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
+    <!-- A-Frame for VR -->
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <style>
+         :root {
+            --primary: #0b3d91;
+            --secondary: #fc3d21;
+            --dark: #121212;
+            --light: #ffffff;
+            --card-bg: #1e1e1e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: var(--dark);
+            color: var(--light);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: var(--primary);
+            color: var(--light);
+            padding: 20px 0;
+            text-align: center;
+        }
+        
+        .tabs {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+            gap: 10px;
+        }
+        
+        .tab-btn {
+            padding: 12px 24px;
+            background: rgba(11, 61, 145, 0.7);
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .tab-btn:hover {
+            background: rgba(11, 61, 145, 0.9);
+        }
+        
+        .tab-btn.active {
+            background: var(--secondary);
+            transform: scale(1.05);
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 10px;
+            margin-bottom: 30px;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .feature-card {
+            background: rgba(30, 30, 30, 0.8);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .feature-card h2 {
+            color: var(--secondary);
+            margin-bottom: 15px;
+        }
+        
+        #iss-map {
+            height: 500px;
+            width: 100%;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        #blackhole-canvas {
+            width: 100%;
+            height: 400px;
+            background: #000;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        #vr-container {
+            width: 100%;
+            height: 500px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+        
+        .vr-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            z-index: 100;
+        }
+        
+        .vr-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(11, 61, 145, 0.7);
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        @media (max-width: 768px) {
+            .tab-btn {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+            #iss-map,
+            #vr-container {
+                height: 300px;
+            }
+            #blackhole-canvas {
+                height: 300px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .tabs {
+                flex-direction: column;
+                align-items: center;
+            }
+            .tab-btn {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <h1>Space Explorer Hub</h1>
+            <p>Explore the cosmos through interactive experiences</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="satellite">Satellite & ISS Tracker</button>
+            <button class="tab-btn" data-tab="blackhole">Black Hole & Asteroids</button>
+            <button class="tab-btn" data-tab="vr">Astronaut VR Experience</button>
+        </div>
+
+        <!-- Satellite & ISS Tracker Tab -->
+        <div id="satellite" class="tab-content active">
+            <div class="feature-card">
+                <h2>Live ISS Tracker</h2>
+                <p>View the International Space Station's current location and trajectory</p>
+                <div id="iss-map"></div>
+                <div id="iss-info">
+                    <p><strong>Altitude:</strong> <span id="iss-alt">408 km</span></p>
+                    <p><strong>Velocity:</strong> <span id="iss-vel">27,600 km/h</span></p>
+                    <p><strong>Next visible pass:</strong> <span id="iss-pass">Tonight at 19:42</span></p>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <h2>Satellite Tracker</h2>
+                <p>Coming soon: Track active satellites in Earth's orbit</p>
+                <div style="height: 200px; background: rgba(0,0,0,0.2); border-radius: 8px; display: flex; justify-content: center; align-items: center;">
+                    <p>Satellite tracking visualization will appear here</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Black Hole & Asteroids Tab -->
+        <div id="blackhole" class="tab-content">
+            <div class="feature-card">
+                <h2>Black Hole Visualization</h2>
+                <p>Explore the gravitational effects of a simulated black hole</p>
+                <canvas id="blackhole-canvas"></canvas>
+                <div class="controls">
+                    <button id="bh-zoom-in">Zoom In</button>
+                    <button id="bh-zoom-out">Zoom Out</button>
+                    <button id="bh-reset">Reset View</button>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <h2>Near-Earth Asteroids</h2>
+                <p>Track asteroids that may pose a risk to Earth</p>
+                <div id="asteroids-list" style="margin-top: 15px;">
+                    <div class="asteroid-item" style="padding: 10px; border-bottom: 1px solid #333;">
+                        <h3>2023 DW</h3>
+                        <p>Diameter: 50m | Close Approach: Feb 14, 2046</p>
+                        <p>Risk: 1 in 560 chance of impact</p>
+                    </div>
+                    <div class="asteroid-item" style="padding: 10px; border-bottom: 1px solid #333;">
+                        <h3>2011 ES4</h3>
+                        <p>Diameter: 30m | Close Approach: Sep 1, 2023</p>
+                        <p>Risk: Will safely pass by Earth</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Astronaut VR Experience Tab -->
+        <div id="vr" class="tab-content">
+            <div class="feature-card">
+                <h2>Astronaut VR Experience</h2>
+                <p>Immerse yourself in a virtual spacewalk (compatible with VR headsets)</p>
+                <div id="vr-container">
+                    <a-scene embedded vr-mode-ui="enabled: false">
+                        <a-assets>
+                            <img id="space-sky" src="https://cdn.glitch.global/5d56a0c6-9a22-4d92-941e-4a2e4a8f29b2/space-sky.jpg">
+                        </a-assets>
+
+                        <a-sky src="#space-sky" rotation="0 -90 0"></a-sky>
+
+                        <a-entity id="spaceship" gltf-model="https://cdn.glitch.global/5d56a0c6-9a22-4d92-941e-4a2e4a8f29b2/spaceship.glb" position="0 0 -5" scale="0.5 0.5 0.5" rotation="0 180 0">
+                        </a-entity>
+
+                        <a-entity id="astronaut" gltf-model="https://cdn.glitch.global/5d56a0c6-9a22-4d92-941e-4a2e4a8f29b2/astronaut.glb" position="2 0 -3" scale="0.8 0.8 0.8" animation="property: rotation; to: 0 360 0; loop: true; dur: 10000">
+                        </a-entity>
+
+                        <a-entity camera look-controls wasd-controls="fly: true"></a-entity>
+                    </a-scene>
+                </div>
+                <div class="vr-controls">
+                    <button class="vr-btn" id="vr-move-forward">↑</button>
+                    <button class="vr-btn" id="vr-move-left">←</button>
+                    <button class="vr-btn" id="vr-move-back">↓</button>
+                    <button class="vr-btn" id="vr-move-right">→</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // Tab functionality
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabId = btn.getAttribute('data-tab');
+
+                // Remove active class from all buttons and contents
+                tabBtns.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+
+                // Add active class to clicked button and corresponding content
+                btn.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+
+                // Initialize features when tab is activated
+                if (tabId === 'satellite' && !window.issMapInitialized) {
+                    initISSTracker();
+                    window.issMapInitialized = true;
+                }
+                if (tabId === 'blackhole' && !window.bhInitialized) {
+                    initBlackHole();
+                    window.bhInitialized = true;
+                }
+            });
+        });
+
+        // ISS Tracker Map
+        function initISSTracker() {
+            const map = L.map('iss-map').setView([0, 0], 2);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // ISS marker (would be updated with real-time data in production)
+            const issIcon = L.icon({
+                iconUrl: 'https://cdn.glitch.global/5d56a0c6-9a22-4d92-941e-4a2e4a8f29b2/iss-icon.png',
+                iconSize: [50, 50],
+                iconAnchor: [25, 25]
+            });
+
+            const issMarker = L.marker([0, 0], {
+                icon: issIcon
+            }).addTo(map);
+            issMarker.bindPopup("<b>International Space Station</b><br>Current position").openPopup();
+
+            // Simulate ISS movement (in a real app, you'd use an API)
+            let lat = 0;
+            let lon = 0;
+            setInterval(() => {
+                lat = (lat + 0.5) % 90;
+                lon = (lon + 2) % 180;
+                issMarker.setLatLng([lat, lon]);
+                map.panTo([lat, lon]);
+            }, 1000);
+        }
+
+        // Black Hole Visualization
+        function initBlackHole() {
+            const canvas = document.getElementById('blackhole-canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Set canvas size
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            // Black hole parameters
+            const bh = {
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                radius: 50,
+                gravity: 0.5
+            };
+
+            // Stars
+            const stars = [];
+            for (let i = 0; i < 200; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 3 + 1,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: (Math.random() - 0.5) * 2
+                });
+            }
+
+            // Animation loop
+            function animate() {
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Draw black hole
+                const gradient = ctx.createRadialGradient(
+                    bh.x, bh.y, bh.radius,
+                    bh.x, bh.y, bh.radius * 3
+                );
+                gradient.addColorStop(0, 'rgba(0,0,0,1)');
+                gradient.addColorStop(0.7, 'rgba(70,0,100,0.8)');
+                gradient.addColorStop(1, 'rgba(0,0,0,0)');
+
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(bh.x, bh.y, bh.radius * 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(bh.x, bh.y, bh.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw event horizon
+                ctx.strokeStyle = 'rgba(255,100,255,0.5)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(bh.x, bh.y, bh.radius * 1.5, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Update and draw stars
+                stars.forEach(star => {
+                    // Calculate distance to black hole
+                    const dx = bh.x - star.x;
+                    const dy = bh.y - star.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    // Apply gravity if close enough
+                    if (distance < 300) {
+                        const force = bh.gravity * (1 - distance / 300);
+                        star.vx += dx / distance * force;
+                        star.vy += dy / distance * force;
+
+                        // Spaghettification effect
+                        if (distance < bh.radius * 2) {
+                            star.size *= 1.05;
+                        }
+                    }
+
+                    // Update position
+                    star.x += star.vx;
+                    star.y += star.vy;
+
+                    // Wrap around edges
+                    if (star.x < 0) star.x = canvas.width;
+                    if (star.x > canvas.width) star.x = 0;
+                    if (star.y < 0) star.y = canvas.height;
+                    if (star.y > canvas.height) star.y = 0;
+
+                    // Draw star
+                    ctx.fillStyle = 'white';
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Draw light trail if moving fast
+                    if (Math.abs(star.vx) > 1 || Math.abs(star.vy) > 1) {
+                        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                        ctx.lineWidth = star.size / 2;
+                        ctx.beginPath();
+                        ctx.moveTo(star.x, star.y);
+                        ctx.lineTo(star.x - star.vx * 2, star.y - star.vy * 2);
+                        ctx.stroke();
+                    }
+                });
+
+                requestAnimationFrame(animate);
+            }
+
+            animate();
+
+            // Black hole controls
+            document.getElementById('bh-zoom-in').addEventListener('click', () => {
+                bh.radius = Math.min(100, bh.radius + 5);
+                bh.gravity += 0.1;
+            });
+
+            document.getElementById('bh-zoom-out').addEventListener('click', () => {
+                bh.radius = Math.max(20, bh.radius - 5);
+                bh.gravity = Math.max(0.1, bh.gravity - 0.1);
+            });
+
+            document.getElementById('bh-reset').addEventListener('click', () => {
+                bh.radius = 50;
+                bh.gravity = 0.5;
+            });
+        }
+
+        // VR Controls
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize ISS tracker if that tab is active first
+            if (document.querySelector('.tab-btn.active').getAttribute('data-tab') === 'satellite') {
+                initISSTracker();
+                window.issMapInitialized = true;
+            }
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                const canvas = document.getElementById('blackhole-canvas');
+                if (canvas) {
+                    canvas.width = canvas.offsetWidth;
+                    canvas.height = canvas.offsetHeight;
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

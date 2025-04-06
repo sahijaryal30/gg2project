@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Explorers Hub</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+         :root {
+            --primary-color: #0b3d91;
+            --secondary-color: #fc3d21;
+            --light-color: #ffffff;
+            --dark-color: #1a1a1a;
+            --card-bg: #f8f9fa;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: var(--light-color);
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .feature-card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        .card-content {
+            padding: 1.5rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .card-footer {
+            padding: 1rem;
+            background-color: #e9ecef;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0a2e6b;
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e0351c;
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .btn-outline:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        #game-canvas {
+            width: 100%;
+            height: 300px;
+            background-color: #000;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+        
+        #chat-container {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+        
+        .chat-message {
+            margin-bottom: 0.8rem;
+            padding: 0.5rem 0.8rem;
+            border-radius: 15px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        
+        .user-message {
+            background-color: #e3f2fd;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .bot-message {
+            background-color: #f1f1f1;
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }
+        
+        #chat-input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .weather-display {
+            height: 300px;
+            background-color: #000;
+            border-radius: 5px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        
+        .planet-view {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .planet {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background-size: cover;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+            position: relative;
+        }
+        
+        .weather-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 1rem;
+        }
+        
+        .planet-selector {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .planet-btn {
+            padding: 0.5rem 1rem;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        
+        .planet-btn.active {
+            background-color: var(--secondary-color);
+        }
+        
+        .ar-container {
+            height: 300px;
+            background-color: #000;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ar-placeholder {
+            color: white;
+            text-align: center;
+            padding: 1rem;
+        }
+        
+        .ar-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        
+        .ar-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        footer {
+            background-color: var(--dark-color);
+            color: var(--light-color);
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            .card-header {
+                font-size: 1.1rem;
+            }
+            .planet-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <h1>Space Explorers Hub</h1>
+            <p>Explore the cosmos through interactive experiences</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="main-grid">
+            <!-- Space Timeline Feature -->
+            <div class="feature-card">
+                <div class="card-header">
+                    Space Exploration Timeline
+                </div>
+                <img src="https://images.unsplash.com/photo-1454789548928-9efd52dc4031?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="Space Timeline" class="card-image">
+                <div class="card-content">
+                    <p>Journey through the history of human spaceflight from Yuri Gagarin's first orbit to modern commercial spaceflight.</p>
+                    <ul style="margin-top: 1rem; padding-left: 1.2rem;">
+                        <li>First human in space (1961)</li>
+                        <li>First moon landing (1969)</li>
+                        <li>First space station (1971)</li>
+                        <li>First space tourist (2001)</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-outline">View Full Timeline</button>
+                </div>
+            </div>
+
+            <!-- Mini Space Game -->
+            <div class="feature-card">
+                <div class="card-header">
+                    Mini Space Game
+                </div>
+                <canvas id="game-canvas"></canvas>
+                <div class="card-content">
+                    <p>Navigate your spacecraft through asteroid fields and collect star power. How far can you travel?</p>
+                    <div style="margin-top: auto; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>Score:</strong> <span id="game-score">0</span>
+                        </div>
+                        <div>
+                            <strong>Level:</strong> <span id="game-level">1</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-primary" id="start-game">Start Game</button>
+                    <button class="btn btn-secondary" id="reset-game">Reset</button>
+                </div>
+            </div>
+
+            <!-- AI Space Chatbot -->
+            <div class="feature-card">
+                <div class="card-header">
+                    AI Space Facts Chatbot
+                </div>
+                <div id="chat-container">
+                    <div class="chat-message bot-message">
+                        Hello! I'm Cosmo, your space facts assistant. Ask me anything about space exploration, planets, or astronauts!
+                    </div>
+                </div>
+                <div class="card-content">
+                    <input type="text" id="chat-input" placeholder="Ask me about space...">
+                    <p style="font-size: 0.8rem; color: #666; margin-top: 0.5rem;">Try: "Who was the first woman in space?" or "Tell me about Mars"</p>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-primary" id="send-chat">Send</button>
+                    <button class="btn btn-outline" id="clear-chat">Clear</button>
+                </div>
+            </div>
+
+            <!-- Dynamic Weather on Planets -->
+            <div class="feature-card">
+                <div class="card-header">
+                    Planetary Weather
+                </div>
+                <div class="weather-display">
+                    <div class="planet-view">
+                        <div class="planet" id="current-planet" style="background-image: url('https://science.nasa.gov/wp-content/uploads/2023/09/mars-800x600-1.jpeg?w=800');"></div>
+                    </div>
+                    <div class="weather-info">
+                        <h3 style="margin-bottom: 0.5rem;">Mars</h3>
+                        <p>Temperature: -63°C</p>
+                        <p>Conditions: Dust storms</p>
+                        <p>Wind: 30 km/h</p>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="planet-selector">
+                        <button class="planet-btn active" data-planet="mars">Mars</button>
+                        <button class="planet-btn" data-planet="jupiter">Jupiter</button>
+                        <button class="planet-btn" data-planet="venus">Venus</button>
+                        <button class="planet-btn" data-planet="saturn">Saturn</button>
+                        <button class="planet-btn" data-planet="neptune">Neptune</button>
+                    </div>
+                    <p>Explore weather conditions on different planets in our solar system. See how extreme planetary weather can be!</p>
+                </div>
+            </div>
+
+            <!-- Astronaut Profiles -->
+            <div class="feature-card">
+                <div class="card-header">
+                    Famous Space Explorers
+                </div>
+                <img src="https://images.unsplash.com/photo-1454789476662-53eb23ba5907?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="Astronauts" class="card-image">
+                <div class="card-content">
+                    <p>Learn about the pioneers who ventured beyond Earth:</p>
+                    <ul style="margin-top: 1rem; padding-left: 1.2rem;">
+                        <li>Yuri Gagarin - First human in space</li>
+                        <li>Neil Armstrong - First moon walker</li>
+                        <li>Valentina Tereshkova - First woman in space</li>
+                        <li>Kalpana Chawla - First Indian-American woman in space</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-outline">View All Profiles</button>
+                </div>
+            </div>
+
+            <!-- AR Mode -->
+            <div class="feature-card">
+                <div class="card-header">
+                    Augmented Reality (AR) Mode
+                </div>
+                <div class="ar-container">
+                    <div class="ar-placeholder">
+                        <div class="ar-overlay">
+                            <div class="ar-icon">🌌</div>
+                            <h3>AR Space Explorer</h3>
+                            <p>View planets and spacecraft in your environment</p>
+                        </div>
+                        <p style="color: #aaa;">AR view will appear here when activated</p>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <p>Experience space in augmented reality. Place planets in your room or see a life-size International Space Station!</p>
+                    <p style="font-size: 0.8rem; color: #666; margin-top: 0.5rem;">Requires device with AR capabilities.</p>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-primary" id="start-ar">Start AR Experience</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 Space Explorers Hub | Explore the Final Frontier</p>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem;">Data from NASA, ESA, and other space agencies</p>
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // Mini Space Game
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const startBtn = document.getElementById('start-game');
+        const resetBtn = document.getElementById('reset-game');
+        const scoreDisplay = document.getElementById('game-score');
+        const levelDisplay = document.getElementById('game-level');
+
+        // Set canvas size
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+
+        // Game variables
+        let gameRunning = false;
+        let score = 0;
+        let level = 1;
+        let ship = {
+            x: canvas.width / 2,
+            y: canvas.height - 50,
+            width: 30,
+            height: 50,
+            speed: 5
+        };
+
+        let asteroids = [];
+        let stars = [];
+        let keys = {};
+
+        // Event listeners
+        startBtn.addEventListener('click', startGame);
+        resetBtn.addEventListener('click', resetGame);
+        window.addEventListener('keydown', keyDown);
+        window.addEventListener('keyup', keyUp);
+
+        function startGame() {
+            if (!gameRunning) {
+                gameRunning = true;
+                score = 0;
+                level = 1;
+                asteroids = [];
+                stars = [];
+                scoreDisplay.textContent = score;
+                levelDisplay.textContent = level;
+                gameLoop();
+            }
+        }
+
+        function resetGame() {
+            gameRunning = false;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            score = 0;
+            level = 1;
+            scoreDisplay.textContent = score;
+            levelDisplay.textContent = level;
+        }
+
+        function keyDown(e) {
+            keys[e.key] = true;
+        }
+
+        function keyUp(e) {
+            keys[e.key] = false;
+        }
+
+        function gameLoop() {
+            if (!gameRunning) return;
+
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw stars background
+            drawStars();
+
+            // Move ship
+            if (keys['ArrowLeft'] && ship.x > 0) {
+                ship.x -= ship.speed;
+            }
+            if (keys['ArrowRight'] && ship.x < canvas.width - ship.width) {
+                ship.x += ship.speed;
+            }
+            if (keys['ArrowUp'] && ship.y > 0) {
+                ship.y -= ship.speed;
+            }
+            if (keys['ArrowDown'] && ship.y < canvas.height - ship.height) {
+                ship.y += ship.speed;
+            }
+
+            // Draw ship
+            drawShip();
+
+            // Create asteroids
+            if (Math.random() < 0.02 * level) {
+                createAsteroid();
+            }
+
+            // Move and draw asteroids
+            updateAsteroids();
+
+            // Create stars
+            if (Math.random() < 0.03) {
+                createStar();
+            }
+
+            // Move and draw stars
+            updateStars();
+
+            // Check collisions
+            checkCollisions();
+
+            // Next frame
+            requestAnimationFrame(gameLoop);
+        }
+
+        function drawStars() {
+            ctx.fillStyle = 'white';
+            for (let i = 0; i < 100; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const size = Math.random() * 2;
+                ctx.fillRect(x, y, size, size);
+            }
+        }
+
+        function drawShip() {
+            ctx.fillStyle = '#3498db';
+            ctx.beginPath();
+            ctx.moveTo(ship.x + ship.width / 2, ship.y);
+            ctx.lineTo(ship.x + ship.width, ship.y + ship.height);
+            ctx.lineTo(ship.x, ship.y + ship.height);
+            ctx.closePath();
+            ctx.fill();
+
+            // Ship flame
+            if (keys['ArrowUp']) {
+                ctx.fillStyle = '#e74c3c';
+                ctx.beginPath();
+                ctx.moveTo(ship.x + ship.width / 2, ship.y + ship.height);
+                ctx.lineTo(ship.x + ship.width / 3, ship.y + ship.height + 15);
+                ctx.lineTo(ship.x + ship.width / 1.5, ship.y + ship.height + 15);
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+
+        function createAsteroid() {
+            const size = Math.random() * 30 + 20;
+            asteroids.push({
+                x: Math.random() * (canvas.width - size),
+                y: -size,
+                width: size,
+                height: size,
+                speed: Math.random() * 2 + 1 * level
+            });
+        }
+
+        function updateAsteroids() {
+            ctx.fillStyle = '#95a5a6';
+            for (let i = 0; i < asteroids.length; i++) {
+                const asteroid = asteroids[i];
+                asteroid.y += asteroid.speed;
+                ctx.beginPath();
+                ctx.arc(asteroid.x + asteroid.width / 2, asteroid.y + asteroid.height / 2, asteroid.width / 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Remove if off screen
+                if (asteroid.y > canvas.height) {
+                    asteroids.splice(i, 1);
+                    i--;
+                }
+            }
+        }
+
+        function createStar() {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: -10,
+                width: 10,
+                height: 10,
+                speed: Math.random() * 3 + 1
+            });
+        }
+
+        function updateStars() {
+            ctx.fillStyle = '#f1c40f';
+            for (let i = 0; i < stars.length; i++) {
+                const star = stars[i];
+                star.y += star.speed;
+                ctx.fillRect(star.x, star.y, star.width, star.height);
+
+                // Remove if off screen
+                if (star.y > canvas.height) {
+                    stars.splice(i, 1);
+                    i--;
+                }
+            }
+        }
+
+        function checkCollisions() {
+            // Check asteroid collisions
+            for (let i = 0; i < asteroids.length; i++) {
+                const asteroid = asteroids[i];
+                if (
+                    ship.x < asteroid.x + asteroid.width &&
+                    ship.x + ship.width > asteroid.x &&
+                    ship.y < asteroid.y + asteroid.height &&
+                    ship.y + ship.height > asteroid.y
+                ) {
+                    // Collision detected
+                    gameRunning = false;
+                    alert(`Game Over! Your score: ${score}`);
+                    return;
+                }
+            }
+
+            // Check star collections
+            for (let i = 0; i < stars.length; i++) {
+                const star = stars[i];
+                if (
+                    ship.x < star.x + star.width &&
+                    ship.x + ship.width > star.x &&
+                    ship.y < star.y + star.height &&
+                    ship.y + ship.height > star.y
+                ) {
+                    // Star collected
+                    stars.splice(i, 1);
+                    i--;
+                    score += 10 * level;
+                    scoreDisplay.textContent = score;
+
+                    // Level up every 100 points
+                    if (score >= level * 100) {
+                        level++;
+                        levelDisplay.textContent = level;
+                    }
+                }
+            }
+        }
+
+        // AI Chatbot
+        const chatContainer = document.getElementById('chat-container');
+        const chatInput = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('send-chat');
+        const clearBtn = document.getElementById('clear-chat');
+
+        sendBtn.addEventListener('click', sendMessage);
+        clearBtn.addEventListener('click', clearChat);
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        function sendMessage() {
+            const message = chatInput.value.trim();
+            if (message) {
+                // Add user message
+                addMessage(message, 'user');
+                chatInput.value = '';
+
+                // Bot response
+                setTimeout(() => {
+                    const response = getBotResponse(message);
+                    addMessage(response, 'bot');
+                }, 500);
+            }
+        }
+
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('chat-message');
+            messageDiv.classList.add(sender === 'user' ? 'user-message' : 'bot-message');
+            messageDiv.textContent = text;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function clearChat() {
+            chatContainer.innerHTML = '<div class="chat-message bot-message">Hello! I\'m Cosmo, your space facts assistant. Ask me anything about space exploration, planets, or astronauts!</div>';
+        }
+
+        function getBotResponse(message) {
+            const lowerMsg = message.toLowerCase();
+
+            // Greetings
+            if (lowerMsg.includes('hi') || lowerMsg.includes('hello') || lowerMsg.includes('hey')) {
+                return "Hello space explorer! Ready to learn some cosmic facts?";
+            }
+
+            // First woman in space
+            if (lowerMsg.includes('first woman') || lowerMsg.includes('woman in space')) {
+                return "Valentina Tereshkova was the first woman in space! She flew aboard Vostok 6 on June 16, 1963, completing 48 orbits of Earth in 3 days.";
+            }
+
+            // First human in space
+            if (lowerMsg.includes('first human') || lowerMsg.includes('first man') || lowerMsg.includes('yuri')) {
+                return "Yuri Gagarin was the first human in space! On April 12, 1961, he completed one orbit around Earth aboard Vostok 1, lasting 108 minutes.";
+            }
+
+            // Moon landing
+            if (lowerMsg.includes('moon') || lowerMsg.includes('apollo') || lowerMsg.includes('armstrong')) {
+                return "The first moon landing was Apollo 11 on July 20, 1969. Neil Armstrong and Buzz Aldrin walked on the moon while Michael Collins orbited above.";
+            }
+
+            // Mars
+            if (lowerMsg.includes('mars')) {
+                return "Mars is the fourth planet from the Sun. It's known as the Red Planet due to iron oxide on its surface. The first successful Mars mission was Mariner 4 in 1965.";
+            }
+
+            // Indian astronauts
+            if (lowerMsg.includes('india') || lowerMsg.includes('indian') || lowerMsg.includes('rakesh') || lowerMsg.includes('kalpana')) {
+                if (lowerMsg.includes('kalpana')) {
+                    return "Kalpana Chawla was the first Indian-American woman in space. She flew on STS-87 (1997) and STS-107 (2003), tragically dying in the Columbia disaster.";
+                }
+                return "Rakesh Sharma was the first Indian citizen in space! He flew aboard Soyuz T-11 in 1984, spending 7 days, 21 hours in space at the Salyut 7 space station.";
+            }
+
+            // Space tourism
+            if (lowerMsg.includes('tourist') || lowerMsg.includes('tito')) {
+                return "Dennis Tito was the first space tourist in 2001, paying $20 million to visit the ISS aboard a Soyuz spacecraft. Today, companies like SpaceX and Blue Origin are making space tourism more accessible.";
+            }
+
+            // Default responses
+            const randomResponses = [
+                "That's an interesting question about space! Did you know there are more stars in the universe than grains of sand on all Earth's beaches?",
+                "I love talking about space exploration! The International Space Station travels at 28,000 km/h, orbiting Earth every 90 minutes.",
+                "Space is full of wonders! For example, a day on Venus is longer than its year - it takes 243 Earth days to rotate once but only 225 to orbit the Sun.",
+                "Fascinating space fact: Neutron stars are so dense that a sugar-cube-sized amount would weigh about a billion tons on Earth!",
+                "Did you know the Hubble Space Telescope has made over 1.5 million observations since its launch in 1990? It's revolutionized our understanding of the universe."
+            ];
+
+            return randomResponses[Math.floor(Math.random() * randomResponses.length)];
+        }
+
+        // Planetary Weather
+        const planetBtns = document.querySelectorAll('.planet-btn');
+        const currentPlanet = document.getElementById('current-planet');
+        const weatherInfo = document.querySelector('.weather-info');
+
+        const planetData = {
+            mars: {
+                name: "Mars",
+                image: "https://science.nasa.gov/wp-content/uploads/2023/09/mars-800x600-1.jpeg?w=800",
+                temp: "-63°C",
+                conditions: "Dust storms",
+                wind: "30 km/h"
+            },
+            jupiter: {
+                name: "Jupiter",
+                image: "https://science.nasa.gov/wp-content/uploads/2023/09/jupiter-800x600-1.jpeg?w=800",
+                temp: "-145°C",
+                conditions: "Violent storms",
+                wind: "600 km/h"
+            },
+            venus: {
+                name: "Venus",
+                image: "https://science.nasa.gov/wp-content/uploads/2023/09/venus-800x600-1.jpeg?w=800",
+                temp: "464°C",
+                conditions: "Acid rain",
+                wind: "350 km/h"
+            },
+            saturn: {
+                name: "Saturn",
+                image: "https://science.nasa.gov/wp-content/uploads/2023/09/saturn-800x600-1.jpeg?w=800",
+                temp: "-178°C",
+                conditions: "Ammonia clouds",
+                wind: "1800 km/h"
+            },
+            neptune: {
+                name: "Neptune",
+                image: "https://science.nasa.gov/wp-content/uploads/2023/09/neptune-800x600-1.jpeg?w=800",
+                temp: "-214°C",
+                conditions: "Methane clouds",
+                wind: "2100 km/h"
+            }
+        };
+
+        planetBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const planet = btn.getAttribute('data-planet');
+
+                // Update active button
+                planetBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Update planet display
+                currentPlanet.style.backgroundImage = `url('${planetData[planet].image}')`;
+
+                // Update weather info
+                weatherInfo.innerHTML = `
+                    <h3 style="margin-bottom: 0.5rem;">${planetData[planet].name}</h3>
+                    <p>Temperature: ${planetData[planet].temp}</p>
+                    <p>Conditions: ${planetData[planet].conditions}</p>
+                    <p>Wind: ${planetData[planet].wind}</p>
+                `;
+            });
+        });
+
+        // AR Mode
+        const arBtn = document.getElementById('start-ar');
+
+        arBtn.addEventListener('click', () => {
+            alert("AR experience would launch here on a device with AR capabilities. This would use WebXR or similar technology to place 3D space objects in your environment.");
+        });
+
+        // Responsive adjustments
+        window.addEventListener('resize', () => {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        });
+    </script>
+</body>
+
+</html>
